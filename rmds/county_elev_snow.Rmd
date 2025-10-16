@@ -1,0 +1,40 @@
+---
+title: ''
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
+# get data
+snow <- read_csv("../../../data/full_snow.csv")
+
+# theme set
+theme_set(theme_bw())
+
+# Code in elevations, order them
+snow.1 <- snow %>% 
+  mutate(elev_level = case_when(
+           elev > 8000 & elev < 9000 ~ "8K-9K",
+           elev > 9000 & elev < 10000 ~ "9K-10K",
+           elev > 10000 & elev < 11000 ~ "10K-11K",
+           elev > 11000 & elev < 12000 ~ "11K-12K"),
+         elev_level = fct_relevel(elev_level, 
+                                  levels = c("8K-9K", 
+                                             "9K-10K", 
+                                             "10K-11K",
+                                             "11K-12K")))
+```
+
+
+
+```{r, warning = FALSE, message=FALSE, echo=FALSE, fig.height=90, fig.width=11}
+# Graphic
+snow.1 %>% 
+  ggplot(aes(x = date, y = start_snow_depth, color = elev_level)) +
+  geom_line() +
+  facet_wrap(~county, nrow = 35, scales = "free_y")
+
+```
+
