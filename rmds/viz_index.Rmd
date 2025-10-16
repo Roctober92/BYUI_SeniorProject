@@ -1,0 +1,85 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+<p id = "title"><strong>Climate Change and Snowpack</strong></p>
+
+<center>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/flag.png)
+
+</center>
+
+<br><br>
+
+<p id = "section"><i>"How does rising temperatures affect snowpack at different elevations?"</i></p>
+
+<br><br>
+
+<p id = "desc">The following visualizations were created to help answer this question. May it be said that the visualizations, data, and predictions could have also been created in many different ways, I just chose one route.</p>
+
+<br><br>
+
+<ul id = "bullet">
+  <li id = "list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/season_length.html" target = "_blank"> Snow Season Length</a></li>
+  <li id = "list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/year_temp_dist.html" target = "_blank">Yearly Temperature Distribution</a></li>
+  <li id = "list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/snow_change.html" target = "_blank">Different Snow Depth Changes Among Elevation</a></li>
+  <li id = "list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/year.html" target = "_blank">Yearly Temperature And Snow Depth Trends</a></li>
+</ul>
+
+
+
+
+<br><br>
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+@import url('https://fonts.googleapis.com/css?family=Baloo+Tamma');
+#title {
+margin: auto;
+text-align: center;
+font-size: 60px;
+font-family: 'Baloo Tamma', cursive;
+color: skyblue;
+}
+#desc{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+}
+#link{
+margin: auto;
+text-align: center;
+font-size: 30px;
+color: brown;
+}
+#bullet{
+list-style-type: square;
+}
+#list{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: 1em;
+color: blue;
+}
+#section{
+margin: auto;
+text-align: center;
+font-size: 35px;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+color: #106414;
+letter-spacing: 5px;
+}
+</style>
