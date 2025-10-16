@@ -12,7 +12,7 @@ library(lubridate)
 
 <center>
 
-![](../snowpack_elevation/r_scripts_replace_na/pics/flag.png)
+![](../pics/flag.png)
 
 </center>
 
