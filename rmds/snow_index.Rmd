@@ -34,7 +34,7 @@ library(lubridate)
   <li id="list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/na_values.html" target = "_blank">Missing Values</a></li>
   <li id="list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/snow_ratios.html" target = "_blank">Snow Ratio Trends</a></li>
   <li id="list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/odd_ratios.html" target = "_blank">Odd Snow Ratios</a></li>
-  <li id="list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/lm_prep.html" target = "_blank">Prediction Preparation</a></li>
+  <li id="list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/lm_prep.html" target = "_blank">Prediction Preparation</a></li>
   <li id="list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/find_regression.html" target = "_blank">Finding the Regression</a></li>
   <li id="list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/apply_regression.html" target = "_blank">Applying Regression</a></li>
   <li id="list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/post_regression.html" target = "_blank">Post Regression Graphics</a></li>
