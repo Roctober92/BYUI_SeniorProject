@@ -1,0 +1,82 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+<p id = "title"><strong>Snow Depth Imputation</strong></p>
+
+<br><br>
+
+<p id = "desc">Much like the <strong>observed temperatures</strong>, the <strong>snow depths</strong> also presented peculiarites.<br><br></p>
+
+<p id = "desc">One critical part to understanding snow depth is understanding this equation: </p>
+
+<br><br>
+
+<center>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/snow_ratio.png)
+
+</center>
+
+<br><br>
+
+<p id = "desc"><strong>SWE</strong> means <i>snow water equivalent</i>, or the snowpack water content. It's critical because every SNOTEL station has reported <i>SWE</i>, even if <strong>snow depth</strong> is missing. If we know the <strong>snow ratio</strong>, we can simply get the <strong>snow depth</strong> by multiplying the <strong>SWE</strong> by the <strong>snow ratio</strong>.<br><br>This analysis aims at learning the trends in <strong>snow ratio</strong>, so we can simply estimate <strong>snow depth</strong>.</p>
+
+<br><br>
+
+<ul id = "bullet">
+  <li id="list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/na_values.html" target = "_blank">Missing Values</a></li>
+  <li id="list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/snow_ratios.html" target = "_blank">Snow Ratio Trends</a></li>
+  <li id="list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/odd_ratios.html" target = "_blank">Odd Snow Ratios</a></li>
+  <li id="list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/lm_prep.html" target = "_blank">Prediction Preparation</a></li>
+  <li id="list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/find_regression.html" target = "_blank">Finding the Regression</a></li>
+  <li id="list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/apply_regression.html" target = "_blank">Applying Regression</a></li>
+  <li id="list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/post_regression.html" target = "_blank">Post Regression Graphics</a></li>
+</ul>
+
+<br><br>
+
+
+<br><br>
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+#title {
+margin: auto;
+text-align: center;
+font-size: 70px;
+font-family: 'Ubuntu', sans-serif;
+}
+#desc{
+font-size: 25px;
+font-family: 'Quicksand', sans-serif;
+}
+#link{
+margin: auto;
+text-align: center;
+font-size: 25px;
+color: brown;
+}
+#bullet{
+list-style-type: square;
+}
+#list{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: .5em;
+color: blue;
+}
+</style>
