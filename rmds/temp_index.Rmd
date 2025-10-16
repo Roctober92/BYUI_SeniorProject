@@ -16,10 +16,10 @@ theme_set(theme_bw())
 <p id = "desc">After collecting the data, I went through a process of visualizing the data, finding a model of re-estimation, imputing problematic values, and analyzing the outcome.<br><br>The following are links that highlight each step of the process.<br><br></p>
 
 <ul id = "bullet">
-  <li id = "list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/temp_check.html" target = "_blank">Checking Data</a></li>
-  <li id = "list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/temp_estimation.html" target = "_blank">Imputing Values</a></li>
-  <li id = "list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/temp_validation.html" target = "_blank">Model Validation</a></li>
-  <li id = "list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/temp_visualize.html" target = "_blank">Visualizations</a></li>
+  <li id = "list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/temp_check.html" target = "_blank">Checking Data</a></li>
+  <li id = "list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/temp_estimation.html" target = "_blank">Imputing Values</a></li>
+  <li id = "list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/temp_validation.html" target = "_blank">Model Validation</a></li>
+  <li id = "list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/temp_visualize.html" target = "_blank">Visualizations</a></li>
 </ul>
 
 
