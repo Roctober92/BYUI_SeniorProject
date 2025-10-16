@@ -1,0 +1,155 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse, car, lubridate, ggridges, viridis)
+```
+
+<p id = "title"><strong>Temperature Distribution</strong></p>
+
+<br><br>
+
+<p id = "desc">What does the yearly temperature distribution look like across the <strong>SNOTEL</strong> stations? The following graphic serves to help us know the nature of temperature.</p>
+
+<br><br>
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, fig.width=11, fig.height=6}
+# get data
+snow <- read_csv("../data/full_snow.csv")
+
+# order month
+snow.1 <- snow %>% 
+  mutate(mon = fct_relevel(mon, levels = c("Jan",
+                                          "Feb",
+                                          "Mar",
+                                          "Apr",
+                                          "May",
+                                          "Jun",
+                                          "Jul",
+                                          "Aug",
+                                          "Sep",
+                                          "Oct",
+                                          "Nov",
+                                          "Dec")))
+
+# yearly summary temp
+snow.1 %>% 
+  ggplot(aes(x = avg_temp, y = mon, fill = ..x..)) +
+  geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
+  scale_fill_viridis(option = "B", name = "Mean Temp") +
+  geom_vline(xintercept = 32, color = "blue", linetype = "dashed") +
+  labs(x = "15 Day Mean Temp",
+       y = "Month",
+       title = "Yearly Mean Temperature",
+       subtitle = "Summer temperatures less varied",
+       caption = "Blue line is 32 degrees, freezing") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        plot.caption = element_text(size = rel(1.5), color = "blue", face = "bold"),
+        plot.subtitle = element_text(size = rel(1.5), face = "bold", color = "red"))
+```
+
+<br><br>
+
+<p id = "desc">Keep in mind that <strong>average temperature</strong> refers to the average between the 15-day <strong>high</strong> and <strong>low</strong>.<br><br> I will also provide the <strong>high</strong> and <strong>low</strong> temperature distributions.</p>
+
+<br><br>
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, fig.width=11, fig.height=6}
+# yearly summary temp
+snow.1 %>% 
+  ggplot(aes(x = max_temp_mean, y = mon, fill = ..x..)) +
+  geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
+  scale_fill_viridis(option = "B", name = "Mean Temp") +
+  geom_vline(xintercept = 32, color = "blue", linetype = "dashed") +
+  labs(x = "15 Day High Temp",
+       y = "Month",
+       title = "Yearly High Temperature",
+       subtitle = "Summer temperatures less varied",
+       caption = "Blue line is 32 degrees, freezing") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        plot.caption = element_text(size = rel(1.5), color = "blue", face = "bold"),
+        plot.subtitle = element_text(size = rel(1.5), face = "bold", color = "red"))
+```
+
+<br><br>
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, fig.width=11, fig.height=6}
+# yearly summary temp
+snow.1 %>% 
+  ggplot(aes(x = min_temp_mean, y = mon, fill = ..x..)) +
+  geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
+  scale_fill_viridis(option = "B", name = "Mean Temp") +
+  geom_vline(xintercept = 32, color = "blue", linetype = "dashed") +
+  labs(x = "15 Day Low Temp",
+       y = "Month",
+       title = "Yearly Low Temperature",
+       subtitle = "Summer temperatures less varied",
+       caption = "Blue line is 32 degrees, freezing") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        plot.caption = element_text(size = rel(1.5), color = "blue", face = "bold"),
+        plot.subtitle = element_text(size = rel(1.5), face = "bold", color = "red"))
+```
+
+
+
+
+
+
+
+
+<br><br>
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+@import url('https://fonts.googleapis.com/css?family=Baloo+Tamma');
+#title {
+margin: auto;
+text-align: center;
+font-size: 75px;
+font-family: 'Baloo Tamma', cursive;
+color: skyblue;
+}
+#desc{
+font-size: 25px;
+font-family: 'Quicksand', sans-serif;
+}
+#link{
+margin: auto;
+text-align: center;
+font-size: 30px;
+color: brown;
+}
+#bullet{
+list-style-type: square;
+}
+#list{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: 1em;
+color: blue;
+}
+#section{
+margin: auto;
+text-align: center;
+font-size: 35px;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+color: #106414;
+letter-spacing: 5px;
+}
+</style>

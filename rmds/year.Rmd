@@ -1,0 +1,306 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+<p id = "title"><strong>Yearly Trends</strong></p>
+
+<br><br>
+
+<p id = "desc">I will now show different visualizations on the trends of elevation with temperature and snow depth: some with early and late season snowfall. This will help us see how weather affects the different elevations.</p>
+
+<br><br>
+
+<p id = "section">High Temperature</p>
+
+<br><br>
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE, fig.width=11, fig.height=6}
+# get data
+snow <- read_csv("../data/full_snow.csv")
+
+# Code in elevations, order them
+snow.1 <- snow %>% 
+  mutate(elev_level = case_when(
+    elev > 8000 & elev < 9000 ~ "8K-9K",
+    elev > 9000 & elev < 10000 ~ "9K-10K",
+    elev > 10000 & elev < 11000 ~ "10K-11K",
+    elev > 11000 & elev < 12000 ~ "11K-12K"),
+    elev_level = fct_relevel(elev_level, 
+                             levels = c("8K-9K", 
+                                        "9K-10K", 
+                                        "10K-11K",
+                                        "11K-12K")))
+
+# yearly max temp
+snow.1 %>% 
+  filter(year != 2018) %>% 
+  group_by(elev_level, year) %>% 
+  summarise(high_temp = mean(max_temp_mean),
+            low_temp = mean(min_temp_mean)) %>% 
+  ggplot(aes(x = year, y = high_temp, color = elev_level)) +
+  geom_line(size = 2) +
+  theme_bw() +
+  labs(x = "Year",
+       y = "15 Day Daily Maximum Temp",
+       color = "Elevation",
+       title = "Yearly Max Temp per Elevation") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        legend.title = element_text(size = rel(1.5))) +
+  scale_x_continuous(breaks = seq(1975, 2020, 2)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .3),
+        legend.text = element_text(size = rel(1.5)))
+
+```
+
+<br><br>
+
+<p id = "desc">A slightly positive trend is developing. Also interesting to note how the difference in temperature between the elevations remains pretty proportional as well.</p>
+
+<br><br>
+
+<p id = "section">Low Temperature</p>
+
+<br><br>
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE, fig.width=11, fig.height=6}
+# yearly low temp
+snow.1 %>% 
+  filter(year != 2018) %>% 
+  group_by(elev_level, year) %>% 
+  summarise(high_temp = mean(max_temp_mean),
+            low_temp = mean(min_temp_mean)) %>% 
+  ggplot(aes(x = year, y = low_temp, color = elev_level)) +
+  geom_line(size = 2) +
+  geom_smooth(method = "lm", color = "black", se = FALSE, size = 2) +
+  theme_bw() +
+  labs(x = "Year",
+       y = "15 Day Minimum Daily Temp",
+       color = "Elevation",
+       title = "Yearly Min Temp per Elevation") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        legend.title = element_text(size = rel(1.5))) +
+  scale_x_continuous(breaks = seq(1975, 2020, 2)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .3),
+        legend.text = element_text(size = rel(1.5)))
+```
+
+<br><br>
+
+<p id = "desc">This one I find alarming. Average yearly low temperatures are increasing steadily, and the gap between 11500 and 11000 stations is also closing. This means temperature disparity is decreasing, which might affect ecology at certain levels as well.</p>
+
+<br><br>
+
+<p id = "section">Low Temperature by Season</p>
+
+<br><br>
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE, fig.width=11, fig.height=6}
+# yearly low temp
+snow.1 %>% 
+  filter(year != 2018) %>% 
+  mutate(month = month(date),
+         season = case_when(
+           month %in% c(4,5,6,7,8,9) ~ "Warm Season",
+           TRUE ~ "Cold Season"
+         )) %>% 
+  group_by(elev_level, year, season) %>% 
+  summarise(high_temp = mean(max_temp_mean),
+            low_temp = mean(min_temp_mean)) %>% 
+  ggplot(aes(x = year, y = low_temp, color = elev_level)) +
+  geom_line(size = 2) +
+  geom_smooth(method = "lm", color = "black", se = FALSE, size = 2) +
+  theme_bw() +
+  facet_grid(~season) +
+  labs(x = "Year",
+       y = "High Temp",
+       color = "Elevation",
+       title = "Yearly Low Temp per Elevation",
+       caption = "Cold season: Oct, Nov, Dec, Jan, Feb, Mar") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        plot.caption = element_text(size = rel(2), face = "bold", color = "red"),
+        axis.title = element_text(size = rel(2), color = "blue"),
+        axis.text = element_text(size = rel(1.5)),
+        legend.title = element_text(size = rel(1.5))) +
+  scale_x_continuous(breaks = seq(1975, 2020, 6)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .3),
+        legend.text = element_text(size = rel(1.5)),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold", size = rel(1.5)),
+        panel.border = element_rect(colour = "black"))
+```
+
+<br><br>
+
+<p id = "desc">This shows us that the 15 day low increaes just about the same in either coldest or warmest 6-month periods.</p>
+
+<br><br>
+
+<p id = "section">Daily High to Low Proportion</p>
+
+<br><br>
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE, fig.width=11, fig.height=6}
+# yearly high-low temp scale
+snow.1 %>% 
+  filter(year != 2018) %>% 
+  group_by(elev_level, year) %>% 
+  summarize(mean_t = mean(max_temp_mean),
+            mean_l = mean(min_temp_mean)) %>% 
+  mutate(scale_temp = round(mean_t/mean_l, 3)) %>%
+  ggplot(aes(x = year, y = scale_temp, color = elev_level)) +
+  geom_line(size = 2) +
+  theme_bw() +
+  labs(x = "Year",
+       y = "High/Low",
+       color = "Elevation",
+       title = "Yearly Mean High/Low Proportion",
+       caption = "Nights are getting warmer, and daily temp variation smaller") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        legend.title = element_text(size = rel(1.5)),
+        plot.caption = element_text(face = "bold", size = rel(1.5))) +
+  scale_x_continuous(breaks = seq(1975, 2020, 2)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .3),
+        legend.text = element_text(size = rel(1.5)))
+```
+
+<br><br>
+
+<p id = "section">May Snowpack</p>
+
+<br><br>
+
+<p id = "desc">The following shows the elevation yearly trends in <strong>May</strong>. I chose May because it's a pivotal month where a lot of the snowpack disappears because of warming temperatures, and maybe this a month where global warming could highly impact.</p>
+
+<br><br>
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE, fig.width=11, fig.height=6}
+snow.1 %>% 
+  filter(mon == "May",
+         start_snow_depth > 0) %>% 
+  group_by(year, elev_level) %>% 
+  summarise(may_snow = mean(start_snow_depth)) %>% 
+  ggplot(aes(x = year, y = may_snow, color = elev_level)) +
+  geom_line(size = 2) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_bw() +
+  labs(x = "Year",
+       y = "Snow Depth",
+       color = "Elevation",
+       title = "Yearly May Snow Depth per Elevation") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        legend.title = element_text(size = rel(1.5))) +
+  scale_x_continuous(breaks = seq(1975, 2020, 2)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .3),
+        legend.text = element_text(size = rel(1.5))) +
+  scale_color_manual(values = c("#885C0E",
+                                "#12A21B",
+                                "#9E1D10",
+                                "#091661"))
+```
+
+<br><br>
+
+<p id = "desc">An overall negative trend is observed, with very little variation within elevations.</p>
+
+<br><br>
+
+<p id = "section">November Snowpack</p>
+
+<br><br>
+
+<p id = "desc">I chose <strong>November</strong> for the same reason: it's a month where snowpack can steadily increase, some that perhaps global warming will delay.</p>
+
+<br><br>
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE, fig.width=11, fig.height=6}
+snow.1 %>% 
+  filter(mon == "Nov",
+         start_snow_depth > 0) %>% 
+  group_by(year, elev_level) %>% 
+  summarise(nov_snow = mean(start_snow_depth)) %>% 
+  ggplot(aes(x = year, y = nov_snow, color = elev_level)) +
+  geom_line(size = 2) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_bw() +
+  labs(x = "Year",
+       y = "Snow Depth",
+       color = "Elevation",
+       title = "Yearly November Snow Depth per Elevation") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        legend.title = element_text(size = rel(1.5))) +
+  scale_x_continuous(breaks = seq(1975, 2020, 2)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .3),
+        legend.text = element_text(size = rel(1.5))) +
+  scale_color_manual(values = c("#885C0E",
+                                "#12A21B",
+                                "#9E1D10",
+                                "#091661"))
+```
+
+<br><br>
+
+<p id = "desc">We are observing more of the same. An overall decreased trend with little variation within month.</p>
+
+
+<br><br>
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Baloo+Tamma');
+#title {
+margin: auto;
+text-align: center;
+font-size: 70px;
+font-family: 'Baloo Tamma', cursive;
+color: skyblue;
+}
+#desc{
+font-size: 25px;
+font-family: 'Quicksand', sans-serif;
+}
+#link{
+margin: auto;
+text-align: center;
+font-size: 25px;
+color: brown;
+}
+#bullet{
+list-style-type: square;
+}
+#list{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: .5em;
+color: blue;
+}
+#section{
+margin: auto;
+text-align: center;
+font-size: 45px;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+color: #106414;
+letter-spacing: 5px;
+}
+</style>

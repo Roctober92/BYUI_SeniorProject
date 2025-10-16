@@ -1,0 +1,291 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+pre_data <- read_csv("../data/na_prep_predata.csv")
+```
+
+<p id = "title"><strong>Temperature Data</strong></p>
+
+<br><br>
+
+<p id = "desc">As mentioned in *Data Collection*, many temperature values just weren't possible, or missing.<br><br>We'll start with addressing the <strong>missing values</strong>:</p>
+
+<br>
+
+<ul id="bullet">
+  <li id="list">Rows with <i>NA</i> max temp values</li>
+  <li id="list">Rows with <i>NA</i> min temp values</li>
+  <li id="list">Rows with <i>NA</i> max and min temp values</li>
+</ul>
+
+<br><br>
+
+```{r, warning = FALSE}
+# Filter out the NA values
+data.max.na <- pre_data %>% 
+  filter(!is.na(min_temp_mean),
+         is.na(max_temp_mean))
+
+data.min.na <- pre_data %>% 
+  filter(is.na(min_temp_mean),
+         !is.na(max_temp_mean))
+
+print(paste("There are", nrow(data.max.na), "missing max temp values"))
+print(paste("There are", nrow(data.min.na), "missing min temp values"))
+print(paste("The entire data set has", nrow(pre_data), "rows"))
+```
+
+<br><br>
+
+<p id = "desc">But even once I subsetted the datasets into whether they had missing max or min temp values, those datasets also had erroneous values. For the dataset where <strong>min temp</strong> was <strong>NA</strong>, there was some bad corresponding <strong>max temp</strong> values. You can see this is the following graphic. Keep in mind that each dot does not represent a daily value, but rather a 15 day mean.</p>
+
+<br><br>
+
+```{r, warning=FALSE, echo = FALSE, message = FALSE, fig.width=11, fig.height=6}
+data.min.na %>% 
+  mutate(mon = as.factor(month(date, label = TRUE))) %>%
+  ggplot(aes(x = mon, y = max_temp_mean)) +
+  geom_jitter(width = .2) +
+  geom_boxplot(alpha = .2, outlier.shape = NA) +
+  theme_bw() +
+  labs(x = "Month",
+       y = "15 Daily Average High (F)",
+       title = "Checking Min Temp",
+       color = "",
+       subtitle = "The 100+ dots and below 25 summer month dots are concerning") +
+  theme(plot.title = element_text(hjust = .5, size = rel(2)),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        plot.subtitle = element_text(face = "bold", size = rel(1.5)),
+        legend.position = "none")
+```
+
+<br><br>
+
+<p id = "desc">To fix this problem, I decided to make every <strong>max temp</strong> value that didn't seem right, into a <strong>NA</strong> value. That is: <i>if the values was above 100, or below 40 between June and October (for a 15 day period), then make it NA</i>. This made both <strong>max</strong> and <strong>min</strong> temps <strong>NA</strong>, so I binded those in with and existing dataset where both <strong>max</strong> and <strong>min</strong> were also <strong>NA.</strong></p>
+
+<br><br>
+
+```{r, warning = FALSE}
+# turning bad values in NA
+data.min.na.2 <- data.min.na %>% 
+  mutate(season = case_when(
+    month(date) > 5 & month(date) < 11 ~ "summer",
+    TRUE ~ "other"),
+    temp = case_when(
+      max_temp_mean > 100 ~ NA_integer_,
+      max_temp_mean < 40 & season == "summer" ~ NA_integer_,
+      TRUE ~ max_temp_mean),
+    max_temp_mean = temp) %>% 
+  select(-c(season, temp))
+
+# filter out NA to add to both.na
+bad.min <- data.min.na.2 %>% filter(is.na(max_temp_mean))
+
+# both are NA
+data.both.na <- pre_data %>% 
+  filter(is.na(max_temp_mean),
+         is.na(min_temp_mean)) %>% 
+  rbind(bad.min) # add recently changed --> NA 
+```
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
+# keep non-na max temp values
+data.min.na.3 <- data.min.na.2 %>% filter(!is.na(max_temp_mean))
+```
+
+
+<br><br>
+
+<p id = "desc">Now here is a good time to mention that this analysis left me with a necessity to make artbitrary decisions when there wasn't a clear answer. <i>How do we know which temperature values are badly reported/observed? Maybe they are outliers?</i><br><br>I will explain gradually some of the decisions I made to combat this problem, and I don't offer them as end-all solutions <i>(I'm not sure any exist)</i>, but possible solutions that seemed to work.</p>
+
+<br><br>
+
+<p id = "desc">For the dataset where the <strong>max temps</strong> are <strong>NA</strong> values, I checked the <strong>min temp</strong> values, found nothing too unusual, and decided to leave it alone.</p>
+
+<br><br>
+
+```{r, warning=FALSE, echo = FALSE, fig.width=11, fig.height=6}
+# boxplot
+data.max.na %>% 
+  mutate(mon = as.factor(month(date, label = TRUE))) %>%
+  ggplot(aes(x = mon, y = min_temp_mean)) +
+  geom_jitter(width = .2) +
+  geom_boxplot(alpha = .2, outlier.shape = NA) +
+  theme_bw() +
+  labs(x = "Month",
+       y = "15 Daily Average Min (F)",
+       title = "Checking Max Temp",
+       color = "",
+       subtitle = "Just at a glance, no values looks extremely unreasonable") +
+  theme(plot.title = element_text(hjust = .5, size = rel(2)),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        plot.subtitle = element_text(face = "bold", size = rel(1.5)),
+        legend.position = "none")
+```
+
+<br><br>
+
+<p id = "desc">Exploring further, I found another <strong>peculiarity:</strong> a large amount of observations where both the
+<strong>max</strong> and <strong>min</strong> were <strong>32</strong>. The following visualization maps that, using the <strong>average temperature</strong> between the <strong>max</strong> and <strong>min</strong> values as the Y. You can tell it's an anomaly, because of it's grouping so far outside of the spread of the data. The spread of the 25-75% range of the data, represented by the box, is very small. For summer months, the anamoly lies near the far 1% of the data.</p>
+
+<br><br>
+
+```{r, warning=FALSE, echo = FALSE, message = FALSE}
+# Get rid of temp NAs: 67,944 Rows
+data.2 <- pre_data %>% 
+  filter(!is.na(max_temp_mean),
+         !is.na(min_temp_mean)) %>% 
+  mutate(mon = month(date, label = TRUE),
+         avg_temp = round((max_temp_mean + min_temp_mean)/2, 1),
+         year = year(date))
+
+# subset 32 degree avg temperatures: 922 Rows
+data.32 <- data.2 %>% 
+  filter(max_temp_mean == 32 & min_temp_mean == 32)
+
+# take the compliment of the above
+data.3 <- data.2 %>% 
+  filter(max_temp_mean != 32 | min_temp_mean != 32)
+
+# order months
+sort_month <- function(x) {
+  x %>% 
+    mutate(mon = fct_relevel(mon, levels = c("Jan",
+                                             "Feb",
+                                             "Mar",
+                                             "Apr",
+                                             "May",
+                                             "Jun",
+                                             "Jul",
+                                             "Aug",
+                                             "Sep",
+                                             "Oct",
+                                             "Nov",
+                                             "Dec")))
+}
+
+```
+
+
+```{r, warning=FALSE, echo = FALSE, message = FALSE, fig.width=11, fig.height=6}
+data.3 %>% 
+  sort_month() %>% 
+  ggplot(aes(x = mon, y = avg_temp)) +
+  geom_jitter(aes(color = mon), width = .2, alpha = .3) +
+  geom_jitter(data = data.32, 
+              aes(x = mon, y = avg_temp),
+              color = "black", width = .2) +
+  geom_boxplot(outlier.shape = NA, width = .4, alpha = .5) +
+  theme_bw() +
+  labs(x = "Month",
+       y = "15 Daily Average Temp (F)",
+       title = "Visualizing Temperature Observations",
+       color = "",
+       subtitle = "Black dots emphasize 32 degree observation anamoly ") +
+  theme(plot.title = element_text(hjust = .5, size = rel(2)),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        plot.subtitle = element_text(face = "bold", size = rel(1.5)),
+        legend.position = "none") +
+  ylim(-50,120)
+```
+
+<br><br>
+
+<p id = "desc">Just like the <strong>NA</strong> data, I subsetted out the <strong>32 degree anamolies</strong> from the <i>regular data</i>.</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE}
+# subset 32 degree avg temperatures: 922 Rows
+data.32 <- data.2 %>% 
+  filter(max_temp_mean == 32 & min_temp_mean == 32)
+
+# take the compliment of the above
+data.3 <- data.2 %>% 
+  filter(max_temp_mean != 32 | min_temp_mean != 32)
+```
+
+<br><br>
+
+<p id = "desc">After doing all of that subsetting, the <i>regular data</i> now has <strong>67022</strong> or the original <strong>75,087</strong> rows. With those rows, I found some more data peculiarities through visualizations, that led me to more data wrangling and cleaning.<br><br>After glancing at the data, I realized that some of the temperature recorded were either not possible, or did not make sense for the month they were recorded in. To visualize this, I decided take the <strong>top and bottom .8%</strong> for <strong>max</strong> and the <strong>top .8% and bottom 1.6%</strong> of the <strong>min</strong> columns, and graph them against the rest. Ultimately, I wanted to see where I draw the line to what I thought was <strong>unlikely data</strong>.<br><br>Here are the <strong>max</strong> and <strong>min visualizations</strong> made.</p>
+
+<br><br>
+
+<center>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/max_plot.png)
+
+</center>
+
+<br><br>
+
+<center>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/min_plot.png)
+
+</center>
+
+<br><br>
+
+<p id = "desc">By looking at the <strong>red</strong> and <strong>black</strong> dots, the very improbable observations are seen. From here, I decided to impute those values.<br><br>Here's a review of what you've read.</p>
+
+<br><br>
+
+<ul id="bullet">
+  <li id="list">Subsetted rows with <i>NA</i> max temp values</li>
+  <li id="list">Subsetted rows with <i>NA</i> min temp values</li>
+  <li id="list">Out of those, turned improbable values into <i>NA</i></li>
+  <li id="list">Subsetted rows with <i>NA</i> max and min temp values</li>
+  <li id="list">Subsetted rows with possibly programmed <i>32 degree</i> values</li>
+  <li id="list">Subsetted top and bottom .8% of max temp values</li>
+  <li id="list">Subsetted top .8% and bottom 1.6% of min temp values</li>
+  <li id="list">All <strong>NA</strong> values will be re-estimated</li>
+  <li id="list"><a id = "link" href = "https://github.com/Roctober92/senior_project_scripts/blob/master/data_prep/na_tempdata_analysis.R" target = "_blank">Full Code</a></li>
+</ul>
+
+
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<br><br>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+#title {
+margin: auto;
+text-align: center;
+font-size: 70px;
+font-family: 'Ubuntu', sans-serif;
+}
+#desc{
+font-size: 25px;
+font-family: 'Quicksand', sans-serif;
+}
+#list{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: .5em;
+color: blue;
+}
+#link{
+margin: auto;
+text-align: center;
+font-size: 25px;
+color: red;
+}
+#bullet{
+list-style-type: square;
+}
+</style>

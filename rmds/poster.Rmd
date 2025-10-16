@@ -1,0 +1,456 @@
+---
+title: "Climate Change and Snowpack"
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse, leaflet, lubridate, ggpubr, DT)
+theme_set(theme_bw())
+month_set <- function(x) {
+  x %>% 
+    mutate(mon = fct_relevel(mon, levels = c("Jan",
+                                             "Feb",
+                                             "Mar",
+                                             "Apr",
+                                             "May",
+                                             "Jun",
+                                             "Jul",
+                                             "Aug",
+                                             "Sep",
+                                             "Oct",
+                                             "Nov",
+                                             "Dec")))
+    
+}
+
+```
+
+
+### SNOTEL Stations {data-commentary-width=300}
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
+full_data <- read_csv("../data/full_snow.csv")
+
+unique_data <- full_data %>% 
+  select(station_name, latitude, longitude, elev) %>% 
+  distinct() %>% 
+  as.tibble()
+
+getColor <- function(x) {
+  sapply(x$elev, function(elev) {
+    if(elev < 9500){
+      "green"
+    } else if(elev < 10000 & elev > 9499){
+      "orange"
+    } else if(elev < 11000 & elev > 9999){
+      "red"
+    } else {
+      "blue"
+    }
+  })
+}
+
+# Make icon
+icons <- awesomeIcons(
+  markerColor = getColor(unique_data)
+)
+
+# make map
+leaflet(unique_data) %>% 
+  addTiles() %>% 
+  addAwesomeMarkers(~longitude,
+                    ~latitude, 
+                    icon = icons,
+                    label = paste(unique_data$station_name, unique_data$elev),
+                    labelOptions = labelOptions(noHide = F, direction = "bottom",
+                                                style = list(
+                                                  "color" = "black",
+                                                  "font-family" = "Titillium Web",
+                                                  "font-style" = "italic",
+                                                  "box-shadow" = "1px 1px rgba(0,0,0,0.25)",
+                                                  "font-size" = "20px",
+                                                  "border-color" = "rgba(0,0,0,0.5)"
+                                                ))) %>% 
+  addLegend(colors = c("green", "orange", "red", "blue"), 
+            labels = c("Below 9500", "9500-10000", "10000-11000", "11000+"),
+            title = "Elevation Levels")
+```
+
+*** 
+
+<ul id = "bullet">
+  <li id = "list">**SNOTEL**: "Snow Telemetry"</li>
+  <li id = "list"><strong>Telemetry:</strong> Automated Communications Process</li>
+  <li id = "list">114 Stations</li>
+  <li id = "list"><strong>Elevations:</strong> 8397 to 11618</li>
+  <li id = "list">Provided by the National Resources Conservation Service (NRCS)</li>
+</ul>
+
+### Climate Change {data-commentary-width=300}
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.height=6, fig.width=11}
+snow.1 <- full_data %>% 
+  mutate(elev_level = case_when(
+    elev > 8000 & elev < 9000 ~ "8K-9K",
+    elev > 9000 & elev < 10000 ~ "9K-10K",
+    elev > 10000 & elev < 11000 ~ "10K-11K",
+    elev > 11000 & elev < 12000 ~ "11K-12K"),
+    elev_level = fct_relevel(elev_level, 
+                             levels = c("8K-9K", 
+                                        "9K-10K", 
+                                        "10K-11K",
+                                        "11K-12K")))
+
+snow.1 %>% 
+  filter(year != 2018) %>% 
+  group_by(elev_level, year) %>% 
+  summarise(high_temp = mean(max_temp_mean),
+            low_temp = mean(min_temp_mean)) %>% 
+  ggplot(aes(x = year, y = low_temp, color = elev_level)) +
+  geom_line(size = 2) +
+  theme_bw() +
+  labs(x = "Year",
+       y = "Annual Average of Daily Low Temperature",
+       color = "Elevation",
+       title = "Annual Daily Low Temperature by Elevation") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5), face = "bold", color = "darkred"),
+        axis.text = element_text(size = rel(1.5)),
+        legend.title = element_text(size = rel(1.5), face = "bold")) +
+  scale_x_continuous(breaks = seq(1975, 2020, 2)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .3),
+        legend.text = element_text(size = rel(1.5)))
+```
+
+***
+
+<ul id = "bullet">
+  <li id = "list">Colloborated with Denver Channel 2 Meteorologist, Matt Makens</li>
+  <li id = "list">Suggested I analyze how warming climate impacts SNOTEL snowpack at different elevations</li>
+  <li id = "list">Suggested I used data provided from <strong>NRCS</strong></li>
+</ul>
+
+### Key Terms {data-commentary-width=300}
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.height=6, fig.width=11}
+full_data %>% 
+  mutate(snow_ratio = round(start_snow_depth/start_snow_water), 1) %>% 
+  ggplot(aes(x = start_snow_water, y = start_snow_depth)) +
+  geom_point(alpha = .4) +
+  geom_smooth(method = "lm", color = "green") +
+  labs(x = "Snow Water Equivalent",
+       y = "Snow Depth",
+       title = "Snow Ratio",
+       subtitle = "Ratio = Depth/SWE") +
+  theme(axis.title = element_text(size = rel(2), face = "bold", color = "blue"),
+        plot.title = element_text(size = rel(2.5), face = "bold", hjust = .5),
+        plot.subtitle = element_text(size = rel(1.5), color = "brown"))
+```
+
+***
+
+<ul id = "bullet">
+  <li id = "list"><strong>Snow Water Equivalent</strong>: How much precipitation in snow</li>
+  <li id = "list"><strong>Snow Ratio</strong>: Linear coefficient between <i>Snow Depth</i> and <i>SWE</i></li>
+  <li id = "list"><strong>Snow Depth</strong>: Measured by "snow pillows" via hydrostatic pressure</li>
+  <li id = "list">**Snow Ratios were important**: Since we always have SWE, but not Snow Depth, the Snow Ratio was the key in predicting Snow Depth</li>
+</ul>
+
+### Data Collection {data-commentary-width=300}
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/nrcs.1.png)
+
+***
+
+<ul id = "bullet">
+  <li id = "list">Queried weather data from NRCS website : **75480 rows**</li>
+  <li id = "list">Measurements are semi-monthly, or roughly every 15 days</li>
+  <li id = "list">SNOTEL station metadata obtained by <i>snotelr</i> R package</li>
+  <li id = "list">1978 - 2018</li>
+  <li id = "list"><strong>Data Cleaning</strong>: format Date, selected useful columns</li>
+  <li id = "list">**Useful columns**: Date, Year, Station Name, SWE, Snow Depth, Max, Min, Elevation, Lat, Long, County</li>
+</ul>
+
+### Exploring Temperature {data-commentary-width=300}
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/max_plot.png)
+
+***
+
+<ul id = "bullet">
+  <li id = "list">Many missing or impossible temperatures</li>
+  <li id = "list">Some stations defaulted to 32 for both <strong>daily min</strong> and <strong>daily max</strong></li>
+  <li id = "list"><strong>Daily max</strong>: decided to impute top and bottom .8% values, intuitively were outliers</li>
+  <li id = "list"><strong>Daily min</strong>: top .8%, bottom 1.6%</li>
+</ul>
+
+### Imputing Temperature {data-commentary-width=300}
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/impute_max.png)
+
+***
+
+<ul id = "bullet">
+  <li id = "list">Used middle 98% as training data</li>
+  <li id = "list">Tried KNN regressor in Python: good *(.86 r^2, 585737 SSE)* but only month/elevation combinations</li>
+  <li id = "list">Decided to do custom KNN: mean of rows returned with within 90 miles, 1000 feet elevation, same date (or month)</li>
+  <li id = "list"><strong><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/temp_validation.html" target = "_blank">Validated</a></strong>: most residuals within 3 degrees (used high temp measurements), SSE = 75190</li>
+</ul>
+
+### Snow Depth Data Problems {data-commentary-width=300}
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.height=6, fig.width=11}
+pre_data <- read_csv("../data/na_prep_predata.csv")
+
+
+# MAKE YEAR COLUMN
+year_data <- pre_data %>% 
+  mutate(year = year(date),
+         mon = month(date, label = TRUE)) 
+
+#### NA PER YEAR PLOT
+year_plot_data <- year_data %>% 
+  group_by(year) %>% 
+  summarize(na_count = sum(is.na(start_snow_depth)),
+            total = n()) %>% 
+  mutate(percent = round(na_count/total, 2),
+         year = as.factor(year))
+
+year_plot_data %>% 
+  ggplot(aes(x = year, y = percent)) +
+    geom_point(aes(size = total)) +
+    theme_classic() +
+    labs(title = "Percent Snow Depth Measurements Missing Per Year", 
+         x = "Year", 
+         y = "Percent Missing",
+         size = "Total Observations") +
+    theme(axis.text.x = element_text(angle = 90),
+          axis.text.y = element_text(size = rel(1.5)),
+          plot.title = element_text(hjust = .5, 
+                                    size = rel(2.5), 
+                                    face = "bold", 
+                                    color = "blue"),
+          axis.title = element_text(size = rel(2), face = "bold", color = "red"),
+          legend.position = c(.8, .8),
+          legend.text = element_text(size = rel(1.5)),
+          legend.title = element_text(size = rel(1.5)))
+```
+
+***
+
+<ul id = "bullet">
+  <li id = "list">Most stations didn't report <strong>snow depth</strong> until 2003</li>
+  <li id = "list">NRCS at data entry **inputted 10:1 or 5:1 snow ratios** when problematic values are observed</li>
+  <li id = "list"><strong><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/snow_ratios.html" target = "_blank">Snow ratio trends:</a></strong> variability within ratio with month, temperature, but not elevation</li>
+  <li id = "list">**Snow ratio** used to help backtrack **snow depth** values through **SWE**.</li>
+</ul>
+
+### Exploring Snow Depth {data-commentary-width=300}
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.height=6, fig.width=11}
+to_prep <- read_csv("../data/full_temp.csv")
+
+# DATA PREPARATION
+no_na <- to_prep %>% 
+  filter(!is.na(start_snow_depth),
+         start_snow_depth > 0,
+         start_snow_water > 0) %>% 
+  select(start_snow_depth, 
+         start_snow_water, 
+         date, 
+         max_temp_mean, 
+         min_temp_mean,
+         elev) %>% 
+  mutate(mon = month(date, label = TRUE),
+         avg_temp = round((max_temp_mean + min_temp_mean)/2, 1))
+
+### Justify taking out >5 ratios after 50 inches, show graph
+# subset for big ratios
+big_ratio <- no_na %>% 
+  mutate(ratio = round(start_snow_depth/start_snow_water, 1)) %>% 
+  filter(ratio > 5 & start_snow_depth > 50)
+
+# graph it
+ggplot(no_na, aes(x = start_snow_water, y = start_snow_depth, color = mon)) +
+  geom_point() +
+  geom_point(data = big_ratio, color = "black") +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_bw() +
+  labs(x = "SWE", 
+       y = "Snow Depth", 
+       title = "Multiple Regression Snow Ratio",
+       color = "Month",
+       subtitle = "Black dots represent Snow Ratio > 5") +
+  theme(axis.text = element_text(size = rel(1.5)),
+        plot.title = element_text(hjust = .5, size = rel(2.5), face = "bold"),
+        axis.title = element_text(size = rel(2), face = "bold", color = "blue"),
+        plot.caption = element_text(size = rel(1.5), face = "bold"),
+        plot.subtitle = element_text(size = rel(1.5), face = "bold"),
+        legend.text = element_text(size = rel(1.5)),
+        legend.title = element_text(size = rel(1.5), face = "bold", color = "darkred")) +
+  scale_x_continuous(breaks = seq(0, 80, 5)) +
+  scale_y_continuous(breaks = seq(0, 250, 25))
+```
+
+***
+
+<ul id = "bullet">
+  <li id = "list">Many snow ratios were improbable</li>
+  <li id = "list">Early/Late season snow ratio is higher</li>
+</ul>
+
+### Finding Regression {data-commentary-width=300}
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/full_model1.png)
+
+***
+
+<ul id = "bullet">
+  <li id = "list"><strong>Method</strong>: Use average temperature, SWE, and Month to explain snow ratio patterns</li>
+  <li id = "list"><strong>Average temperature</strong>: (High + Low)/2</li>
+  <li id = "list">Explored 3 models, used BoxCox method to pick Y transformation</li>
+  <li id = "list">Decided to apply square root transformation to both SWE and Snow Depth(y)</li>
+  <li id = "list">Model (70% data) = .94, Validation (30% data) = .94, Full Data = .94</li>
+  <li id = "list">StDev around 5 inches, 95% of data within 10 inches of actual depth</li>
+</ul>
+
+### Imputing Snow Depth {data-commentary-width=300}
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.height=6, fig.width=11}
+full_data %>% 
+  month_set() %>%
+  #filter(start_snow_depth >= 1) %>% 
+  ggplot(aes(x = mon, y = start_snow_depth, color = mon)) +
+  geom_jitter(width = .2, alpha = .3) +
+  geom_boxplot(width = .4, alpha = .5, outlier.shape = NA, color = "black") +
+  labs(x = "Months",
+       y = "Snow Depth",
+       title = "Snow Depth Per Month",
+       color = "",
+       subtitle = "",
+       caption = "High May outlier values?") +
+  theme(plot.title = element_text(hjust = .5, size = rel(2), face = "bold"),
+        axis.title = element_text(size = rel(2), face = "bold"),
+        plot.subtitle = element_text(face = "bold",size = rel(1.5), color = "blue"),
+        axis.text = element_text(size = rel(1.5)),
+        plot.caption = element_text(face = "bold", size = rel(1.5),  color = "red"),
+        legend.position = "none") 
+```
+
+***
+
+<ul id = "bullet">
+  <li id = "list">Passed <strong>month</strong>, <strong>SWE</strong>, and <strong>average temp</strong> through <i>predict()</i> for prediction</li>
+  <li id = "list">90.8% of June-October observations had no snow</li>
+  <li id = "list">41.2% of observations had no snow</li>
+</ul>
+
+### Climate Change and Snow Depth {data-commentary-width=300}
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.height=6, fig.width=11}
+full_data.1 <- full_data %>% 
+    mutate(elev_level = case_when(
+    elev > 8000 & elev < 9000 ~ "8K-9K",
+    elev > 9000 & elev < 10000 ~ "9K-10K",
+    elev > 10000 & elev < 11000 ~ "10K-11K",
+    elev > 11000 & elev < 12000 ~ "11K-12K"),
+    elev_level = fct_relevel(elev_level, 
+                             levels = c("8K-9K", 
+                                        "9K-10K", 
+                                        "10K-11K",
+                                        "11K-12K")))
+
+full_data.1 %>% 
+  filter(mon == "May",
+         start_snow_depth > 0) %>% 
+  group_by(year, elev_level) %>% 
+  summarise(may_snow = mean(start_snow_depth)) %>% 
+  ggplot(aes(x = year, y = may_snow, color = elev_level)) +
+  geom_line(size = 2) +
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_vline(xintercept = 1996, color = "blue", linetype = "dashed") +
+  geom_vline(xintercept = 2003, color = "red", linetype = "dashed") +
+  geom_vline(xintercept = 2011, color = "green", linetype = "dashed") +
+  annotate("text", x = 1989, y = 70, label = "100% imputed until 1996") +
+  annotate("text", x = 2006, y = 70, label = "50% imputed") +
+  annotate("text", x = 2014, y = 70, label = "0% imputed") +
+  theme_bw() +
+  labs(x = "Year",
+       y = "Snow Depth",
+       color = "Elevation",
+       title = "Yearly May Snow Depth per Elevation") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        legend.title = element_text(size = rel(1.5))) +
+  scale_x_continuous(breaks = seq(1975, 2020, 2)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .3),
+        legend.text = element_text(size = rel(1.5))) +
+  scale_color_manual(values = c("#885C0E",
+                                "#12A21B",
+                                "#9E1D10",
+                                "#091661"))
+```
+
+***
+
+<ul id = "bullet">
+  <li id = "list">Increase temperature means smaller snow season</li>
+  <li id = "list">Snow season has decreased over last 40 years</li>
+  <li id = "list">At a glance, warming climate has slightly more negative affect on lower elevation snowpack</li>
+  <li id = "list">Nightly low temperature steadily increasing</li>
+  <li id = "list">Daily temperature disparity is shrinking</li>
+  <li id = "list">Snowpack decrease over last 40 years</li>
+  <li id = "list">Decrease seems mostly constant across elevations</li>
+</ul>
+
+
+
+<br><br>
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+#title {
+margin: auto;
+text-align: center;
+font-size: 70px;
+font-family: 'Ubuntu', sans-serif;
+}
+#desc{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+}
+#link{
+font-size: 20px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: .5em;
+}
+#bullet{
+list-style-type: square;
+}
+#list{
+font-size: 20px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: .5em;
+}
+#section{
+margin: auto;
+text-align: center;
+font-size: 45px;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+color: #106414;
+letter-spacing: 5px;
+}
+</style>
+

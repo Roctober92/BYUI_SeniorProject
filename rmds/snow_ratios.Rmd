@@ -1,0 +1,216 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+<p id = "title"><strong>Snow Ratios</strong></p>
+
+<br><br>
+
+<p id = "desc">The <strong>snow ratio</strong> was a great tool in helping me estimate **snow depth**. As I explained in the index page, since we know the <strong>SWE</strong>, we can predict the <strong>snow depth</strong>, as long as we know the ratio between the two. This was the basis for estimating <strong>snow depth</strong>.<br><br>Here are some questions I had when thinking about <strong>snow ratios.</strong><br><br></p> 
+
+<ul id="bullet">
+  <li id="list">When does the snow ratio change?</li>
+  <li id="list">Is it affected by temperature?</li>
+  <li id="list">Is it affected by month?</li>
+  <li id="list">Is it affected by elevation?</li>
+</ul>
+
+<br><br>
+
+<p id = "desc">I made a few visualizations in helping me answer those questions.</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
+in_data <- read_csv("../data/full_temp.csv")
+
+# Make sure there is no NA, all > 0, code elevation levels,
+# only include logical ratios, order elev 
+elev_data <- in_data %>% 
+  select(date, start_snow_water, start_snow_depth, elev) %>% 
+  filter(!is.na(start_snow_depth),
+         start_snow_depth > 0,
+         start_snow_water > 0) %>% 
+  mutate(ratio = round(start_snow_depth/start_snow_water, 2),
+         elev_level = case_when(
+           elev > 8000 & elev < 9000 ~ "8K-9K",
+           elev > 9000 & elev < 10000 ~ "9K-10K",
+           elev > 10000 & elev < 11000 ~ "10K-11K",
+           elev > 11000 & elev < 12000 ~ "11K-12K"
+         ),
+         elev_level = fct_relevel(elev_level, 
+                                  levels = c("8K-9K", 
+                                             "9K-10K", 
+                                             "10K-11K",
+                                             "11K-12K"))) %>% 
+  filter(ratio < 12) 
+```
+
+
+<p id="section">Elevation</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.width=11, fig.height=7}
+ggplot(elev_data, aes(x = elev_level, y = ratio)) +
+  geom_jitter(aes(color = elev_level), alpha = .3, width = .3) +
+  geom_boxplot(outlier.shape = NA, alpha = .3, width = .4) +
+  theme_classic() +
+  labs(y = "Snow Ratio", 
+       x = "Elevation Levels",
+       title = "Ratio Unaffected") +
+  theme(axis.text = element_text(size = rel(1.5)),
+        axis.title = element_text(size = rel(2)),
+        plot.title = element_text(hjust = .5, size = rel(2), face = "bold"),
+        legend.position = "none")
+```
+
+<br><br>
+
+<p id = "desc">Holding other variables constant, elevation does not affect a visible change. However, what we do see that is interesting are the dense bands of observations with a 10:1 ratio, along with 7.5 , 7, and 5. These are furthur explained <a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/odd_ratios.html" target = "_blank">here</a>.</p>
+
+<br><br>
+
+<p id="section">Month</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
+ratio_data <- in_data %>% 
+  select(date, start_snow_water, start_snow_depth, elev, station_name) %>% 
+  filter(!is.na(start_snow_depth),
+         start_snow_depth > 0,
+         start_snow_water > 0) %>% 
+  mutate(ratio = round(start_snow_depth/start_snow_water, 2),
+         mon = fct_relevel(month(date, label = TRUE), 
+                           levels = c("Oct", 
+                                      "Nov", 
+                                      "Dec", 
+                                      "Jan", 
+                                      "Feb", 
+                                      "Mar", 
+                                      "Apr", 
+                                      "May", 
+                                      "Jun", 
+                                      "Jul"))) %>% 
+  filter(ratio < 12) 
+```
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.width=11, fig.height=7}
+ggplot(data = ratio_data, aes(x = mon, y = ratio)) +
+  geom_jitter(aes(color = mon), width = .2, alpha = .4) +
+  geom_boxplot(outlier.shape = NA, width = .3, alpha = .5) +
+  theme_classic() +
+  labs(title = "Possible Significance In Month",
+       x = "Month", 
+       y = "Snow Ratio") +
+  theme(plot.title = element_text(hjust = .5, size = rel(2.5), face = "bold"),
+        axis.title = element_text(size = rel(2), face = "bold"),
+        axis.text = element_text(size = rel(1.5)),
+        legend.text = element_text(size = rel(1.5)),
+        legend.position = "none") + 
+  scale_color_manual(values = c("#D6DE33",
+                                "#BADE33",
+                                "#77CB18",
+                                "#58E1C8",
+                                "#26CBDE",
+                                "#267FDE",
+                                "#9373E7",
+                                "#D473E7",
+                                "#E773A4",
+                                "#C1545B"))
+```
+
+<br><br>
+
+<p id = "desc">Unlike the <i>elevation graph</i>, there is both variation in spread and boxplot location with month, where the <strong>snow ratio</strong> seems to be highest and most spread in the fall. <br><br>How will this help us? <br><br>We always have the <strong>SWE</strong>, but not always the <strong>snow depth</strong>. Using the graph above, we know the ratio between the two, and we also know the ratio changes depending on the month. To find the <strong>snow depth</strong>, we simply multiply the ratios above by the <strong>SWE</strong>. Of course, the boxplots don't give us super succinct values within the month, and that's why later I performed a <strong>regression.</strong></p>
+
+<br><br>
+
+<p id="section">Temperature</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.width=11, fig.height=7}
+td2 <- in_data %>% 
+  filter(!is.na(start_snow_water),
+         !is.na(start_snow_depth)) %>% 
+  mutate(ratio = round(start_snow_depth/start_snow_water, 1),
+         avg_temp = round((max_temp_mean + min_temp_mean)/2, 1)) %>% 
+  filter(ratio < 12)
+
+# make linear viz
+td2 %>% 
+  ggplot(aes(x = avg_temp, y = ratio)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, size = 3) +
+  theme_bw() +
+  labs(title = "Downward Trend",
+       x = "Average Temp", 
+       y = "Snow Ratio",
+       subtitle = "Average Temp Calculated by (High+Low)/2") +
+  theme(plot.title = element_text(hjust = .5, size = rel(2.5), face = "bold"),
+        axis.title = element_text(size = rel(1.5), face = "bold", color = "blue"),
+        axis.text = element_text(size = rel(1.5)),
+        plot.subtitle = element_text(size = rel(1.5), face = "bold", color = "red"))
+
+
+```
+
+<br><br>
+
+<p id = "desc">Temperature looks to also add some insight on how <strong>snow ratio</strong> changes, and probably is the driving reason behind why the ratio changes per <strong>month</strong>.<br><br>Repeating observations at certain <strong>snow ratios</strong> are also easily seen.<br><br>The regression I selected to use later involved both <strong>month</strong> and <strong>temperature.</strong></p>
+
+
+
+<br><br>
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+#title {
+margin: auto;
+text-align: center;
+font-size: 70px;
+font-family: 'Ubuntu', sans-serif;
+}
+#desc{
+font-size: 25px;
+font-family: 'Quicksand', sans-serif;
+}
+#link{
+margin: auto;
+text-align: center;
+font-size: 25px;
+color: brown;
+}
+#bullet{
+list-style-type: square;
+}
+#list{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: .5em;
+color: blue;
+}
+#section{
+margin: auto;
+text-align: center;
+font-size: 45px;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+color: #106414;
+letter-spacing: 5px;
+}
+</style>

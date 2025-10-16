@@ -1,0 +1,129 @@
+---
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+library(tidyverse)
+library(lubridate)
+library(DT)
+```
+
+<p id = "title"><strong>Temperature Imputation</strong></p>
+
+<br><br>
+
+<p id = "desc">As explained in *Checking Data*, this analysis, a large amount of the recorded temperature values from the <i>SNOTEL</i> stations were <strong>intuitively innaccurate</strong>. Therefore, the following is a synopsis of how I went about estimating what I'd hope and suppose would be the real values, or close to them.</p>
+
+<br><br>
+
+<p id = "desc">I first chose the route of <strong>K Nearest Neighbors regression</strong> written in <strong>python</strong>, where I <a id = "link" href = "https://roctober92.github.io/portfolio/topics/ml/knn.html" target = "_blank">tried to estimate the temperature</a> based on <i>month</i> and <i>elevation</i>, but that only estimates temperature based on combinations of the two. Since there are *936* combinations between the two, it could be used! However, that method ignores any yearly or regional variation. Therefore, we chose a method that considers that.</p>
+
+<br><br>
+
+<p id = "desc">If a station happened to report innaccurately, I wrote a <a id = "link" href = "https://github.com/Roctober92/senior_project_scripts/blob/master/r_knn/knn_calculate.R" target = "_blank">script</a> that gathered information from surrounding stations near the same moment, and returned a mean from them. This way, if there was an unusual cold front, warm spell, or storm coming through, it would be more likely to take that into account when estimating. This would be more accurate than the <strong>KNN method</strong> mentioned above.<br><br>After **validation**, here's the logic I used. For every row in NA value dataset, find all stations: <br><br></p>
+
+<ul id="bullet">
+  <li id="list">Within 1000 feet elevation</li>
+  <li id="list">With same date</li>
+  <li id="list">Within 70 miles</li>
+</ul>
+
+<br><br>
+
+<p id = "desc">If that didn't return any rows, instead of looking for the <strong>same date</strong>, I looked for the <strong>same month</strong>.</p>
+
+<br><br>
+
+<center>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/knn_logic.png)
+
+</center>
+
+<br><br>
+
+<p id = "desc">Each row would find between 1 and many (hundreds maybe) of observations from similar stations based on the above criteria. Simply, I took the mean predicted temperature from all similar stations for each row of <i>NA</i> data, and condensed it into a list.</p>
+
+<br><br>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/mean1.png)
+
+
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/mean2.png)
+
+<br><br>
+
+<p id = "desc">I did this process for the following datasets: </p>
+
+<br><br>
+
+<ul id="bullet">
+  <li id="list">32 Anamoly high temps</li>
+  <li id="list">32 Anamoly low temps</li>
+  <li id="list">Top .8% max temps</li>
+  <li id="list">Top .8% min temps</li>
+  <li id="list">Bottom .8% max temps</li>
+  <li id="list">Bottom 1.6% min temps</li>
+  <li id="list">NA high temps</li>
+  <li id="list">NA low temps</li>
+  <li id="list">NA both high</li>
+  <li id="list">NA both low</li>
+</ul>
+
+<br><br>
+
+<p id = "desc">After each dataset prediction, I created jittered scatterplots. Here are the predictions for the top .8% of <strong>daily maximums</strong>: </p>
+
+<br><br>
+
+<center>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/max_preds.png)
+
+</center>
+
+<br><br>
+
+<p id = "desc">The spread and location of the data looks both realistic and representative.<br><br>After this, I  combined and visualized the data.</p>
+
+
+<br><br>
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+#title {
+margin: auto;
+text-align: center;
+font-size: 70px;
+font-family: 'Ubuntu', sans-serif;
+}
+#desc{
+font-size: 25px;
+font-family: 'Quicksand', sans-serif;
+}
+#link{
+margin: auto;
+text-align: center;
+font-size: 25px;
+color: red;
+}
+#bullet{
+list-style-type: square;
+}
+#list{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: .5em;
+color: blue;
+}
+</style>

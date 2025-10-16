@@ -1,0 +1,134 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+<p id = "title"><strong>Snow Depth Change</strong></p>
+
+<br><br>
+
+<p id = "desc">The following is the combinations of all months and elevations mapped with the <strong>linear model</strong> of <i>snow depth and average temperature</i>.</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.width=11, fig.height=7}
+# get data
+snow <- read_csv("../data/full_snow.csv")
+
+# create elevation levels, reorder levels and months
+snow.1 <- snow %>% 
+  mutate(elev_level = case_when(
+    elev > 8000 & elev < 9000 ~ "8K-9K",
+    elev > 9000 & elev < 10000 ~ "9K-10K",
+    elev > 10000 & elev < 11000 ~ "10K-11K",
+    elev > 11000 & elev < 12000 ~ "11K-12K"),
+    elev_level = fct_relevel(elev_level, 
+                             levels = c("8K-9K", 
+                                        "9K-10K", 
+                                        "10K-11K",
+                                        "11K-12K")),
+    mon = fct_relevel(mon, levels = c("Jan",
+                                      "Feb",
+                                      "Mar",
+                                      "Apr",
+                                      "May",
+                                      "Jun",
+                                      "Jul",
+                                      "Aug",
+                                      "Sep",
+                                      "Oct",
+                                      "Nov",
+                                      "Dec")))
+
+# Whole dataset: facet grid
+snow.2 <- snow.1 %>% 
+  mutate(elev_fit = as.factor(case_when(
+    elev < 9250 ~ 9000,
+    elev < 9750 & elev > 9249 ~ 9500,
+    elev < 10250 & elev > 9749 ~ 10000,
+    elev < 10750 & elev > 10249 ~ 10500,
+    elev < 11250 & elev > 10749 ~ 11000,
+    elev < 11750 & elev > 10749 ~ 11500,
+    TRUE ~ 12000
+  )),
+  elev_fit = fct_relevel(elev_fit, levels = c("11500","11000", "10500", "10000", "9500")))
+
+# facet grid
+snow.2 %>% 
+  ggplot(aes(x = avg_temp, y = start_snow_depth, color = elev_fit)) +
+  geom_point() +
+  geom_smooth(color = "black", method = "lm", se = FALSE) +
+  facet_grid(elev_fit ~ mon, scales = "free_y") +
+  theme_bw() +
+  labs(x = "Average 15 Day Temp",
+       y = "Snow Depth",
+       color = "Elevation",
+       title = "Depth by Temp, Elevation, and Mon") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5)),
+        legend.title = element_text(size = rel(1.5)),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold", size = rel(1.5)),
+        panel.border = element_rect(colour = "black"))
+```
+
+<br><br>
+
+<p id = "desc">The intent of this is trying to see if temperature affected the slope differently between the combinations of elevations and months. This could help us answer questions like <strong>how would rising temperatures affect snow depth among different elevations early and late in the season?</strong><br><br>To such a question, it looks like it might be affecting higher elevations more often <i>(steeper slope)</i>, but it's hard to tell without numerical analysis if there is significance.<br><br>What we can tell is that the highest reported snow amounts are around 10000 feet, and that <strong>early</strong> and <strong>late</strong> season snow depths are more affected in higher elevations with rising temperature.</p>
+
+
+
+
+
+<br><br>
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+@import url('https://fonts.googleapis.com/css?family=Baloo+Tamma');
+#title {
+margin: auto;
+text-align: center;
+font-size: 70px;
+font-family: 'Baloo Tamma', cursive;
+color: skyblue;
+}
+#desc{
+font-size: 25px;
+font-family: 'Quicksand', sans-serif;
+}
+#link{
+margin: auto;
+text-align: center;
+font-size: 25px;
+color: brown;
+}
+#bullet{
+list-style-type: square;
+}
+#list{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: 1em;
+color: blue;
+}
+#section{
+margin: auto;
+text-align: center;
+font-size: 35px;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+color: #106414;
+letter-spacing: 5px;
+}
+</style>

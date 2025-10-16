@@ -1,0 +1,297 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse, lubridate, viridis, plotly)
+theme_set(theme_bw())
+```
+
+<p id = "title"><strong>Season Length</strong></p>
+
+<br><br>
+
+<p id = "desc">There has been some concern that rising temperatures are affecting the snow season length, or the length of time that snow stays around. This would impact watersheds, runoff, skiing, among many other things. <br><br>The following lightly explores some trends from the <strong>SNOTEL data</strong> in attempt to offer insight into this concern.</p>
+
+<br><br>
+
+<p id = "section">Calculations</p>
+
+<br><br>
+
+<p id = "desc">Since our observations come in 15-day periods, the calculations of <strong>days of snow</strong> were estimated in the following manner:</p>
+
+<br><br>
+
+<ul id = "bullet">
+  <li id = "list">Took out August and September (no snow reported)</li>
+  <li id = "list">Counted October as the beginning of the <strong>snow year</strong></li>
+  <li id = "list">Counted how many station observations per Oct-July had snow</li>
+  <li id = "list">Multiplied that count per station and year by 15</li>
+</ul>
+
+<br><br>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/season.png)
+
+<br><br>
+
+<p id = "section">Oldest Reporting <a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/station_map.html" target = "_blank">Stations</a></p>
+
+<br><br>
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, fig.width=11, fig.height=7}
+snow <- read_csv("../data/full_snow.csv")
+
+# Station Length
+snow %>% 
+  group_by(station_name) %>% 
+  mutate(month_len = round(time_length(interval(start, end), unit = "month"), 0)) %>% 
+  summarise(month_len = mean(month_len)) %>% 
+  top_n(30) %>% 
+  ggplot(aes(x = fct_reorder(station_name, month_len), y = month_len)) +
+  geom_bar(stat = "identity", width = .5, fill = "#093484") +
+  coord_flip() +
+  theme(legend.position = "none",
+        plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5), face = "bold")) +
+  labs(y = "# of Months Reporting",
+       x = "Station",
+       title = "Station Duration in Reporting") +
+  geom_text(aes(y = month_len, label = month_len), nudge_y = 15)
+```
+
+<br><br>
+
+<p id = "section">Season Length Per Elevation</p>
+
+<br><br>
+
+<p id = "desc">With rising temperatures, does it affect # of reporting snow days per year at different elevations?</p>
+
+<br><br>
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, fig.width=11, fig.height=7}
+# Temperature and number of 15 day periods with snow depth
+snow_day <- snow %>% 
+  filter(!mon %in% c("Aug", "Sep")) %>% # these have 0 snow
+  mutate(date = date + months(3), # start October as January
+         year = year(date),
+         if_snow = case_when(
+           start_snow_depth == 0 ~ 0,
+           TRUE ~ 1)) %>% 
+  group_by(year, station_name) %>% 
+  summarize(snow_days = sum(if_snow)*15,
+            elev = mean(elev),
+            mean_temp = round((mean(max_temp_mean) + mean(min_temp_mean)/2),0),
+            count = n()) %>% 
+  mutate(elev_level = case_when(
+    elev > 8000 & elev < 9000 ~ "8K-9K",
+    elev > 9000 & elev < 10000 ~ "9K-10K",
+    elev > 10000 & elev < 11000 ~ "10K-11K",
+    elev > 11000 & elev < 12000 ~ "11K-12K"),
+    elev_level = fct_relevel(elev_level, 
+                             levels = c("8K-9K", 
+                                        "9K-10K", 
+                                        "10K-11K",
+                                        "11K-12K")),
+    elev_fit = as.factor(case_when(
+      elev < 9250 ~ 9000,
+      elev < 9750 & elev > 9249 ~ 9500,
+      elev < 10250 & elev > 9749 ~ 10000,
+      elev < 10750 & elev > 10249 ~ 10500,
+      elev < 11250 & elev > 10749 ~ 11000,
+      elev < 11750 & elev > 10749 ~ 11500,
+      TRUE ~ 12000
+    ))) %>% 
+  filter(count > 9, year != 2018)
+
+# faceted regression
+snow_day %>% 
+  ggplot(aes(x = mean_temp, y = snow_days, color = as.factor(elev_fit))) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  theme_bw() +
+  facet_wrap(~as.factor(elev_fit), nrow = 1) +
+  labs(x = "Mean Temperature",
+       y = "Days With Snow",
+       subtitle = "Temperature Calculated October - July") +
+  theme(strip.background = element_blank(),
+        strip.text = element_text(face = "bold", size = rel(1.5)),
+        legend.position = "none",
+        axis.title = element_text(size = rel(2), face = "bold"),
+        plot.subtitle = element_text(size = rel(2), face = "bold", color = "blue"))
+```
+
+<br><br>
+
+<p id = "desc">Here, we'd be looking at the slopes. Does the amount of days per degrees decline much more at one elevation that another? This might help us know if rising temperatures would affect one elevation over another. But glancing at the plot, it's not really showing much variation, albeit there are probably better ways go about solving the problem.<br><br></p>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/snowday.png)
+
+<br><br>
+
+<p id = "desc"> Mapping a quick regression shows that the slope at <strong>9000 ft.</strong> is the most horizontal <i>-3.24</i>, and the slope at <strong>11000 ft.</strong> is most vertical <i>-3.9</i>, which would suggest that temperature affects snowpack at higher elevations.</p>
+
+<br><br>
+
+<p id = "section">Same Graph, 3D</p>
+
+<br><br>
+
+<p id = "desc">Looking at it from a 3D perspective, it looks equally as uniform. The best way to use this is the press the girating icon (4th from the left), and have the <strong>Days of Snow</strong> be the vertical axis.</p>
+
+<br><br>
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, fig.width=11, fig.height=7}
+# 3D plot
+plot_ly(snow_day, 
+        x = ~elev_fit, 
+        y = ~mean_temp,
+        z = ~snow_days,
+        color = ~elev_fit) %>% 
+  add_markers() %>% 
+  layout(scene = list(xaxis = list(title = 'Elevation levels'),
+                      yaxis = list(title = 'Average Temp (F)'),
+                      zaxis = list(title = 'Days of Snow')))
+```
+
+<br><br><br>
+
+<p id = "section">Snow Days to Temperature Correlation</p>
+
+<br><br>
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, fig.width=11, fig.height=7}
+snow_lm <- snow_day %>% 
+  group_by(year) %>% 
+  summarise(mean_temp = round(mean(mean_temp),1),
+            snow_days = round(mean(snow_days),0),
+            obs_num = n())
+
+ggplot(snow_lm, aes(x = mean_temp, y = snow_days)) +
+  geom_point(size = 2, aes(size = obs_num)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_bw() +
+  labs(x = "Mean Temperature",
+       y = "Days With Snowpack",
+       title = "Linear Days With Snowpack and Temperature",
+       subtitle = ".25 correlation") +
+  theme(plot.title = element_text(size = rel(2), face = "bold", hjust = .5),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        legend.title = element_text(size = rel(1.5)),
+        legend.position = "none",
+        plot.subtitle = element_text(face = "bold", size = rel(1.5), color = "red"))
+```
+
+<br><br><br>
+
+<p id = "section">Snowpack Days Through Years</p>
+
+<br>
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, fig.width=11, fig.height=20}
+snow_day %>% 
+  mutate(elev_fit = fct_relevel(elev_fit,
+                                levels = c("11500", "11000", "10500", "10000", "9500", "9000"))) %>%
+  ggplot(aes(x = year, y = snow_days, color = as.factor(year))) +
+  geom_jitter() +
+  geom_boxplot(color = "black", 
+               aes(group = as.factor(year)),
+               outlier.shape = NA) +
+  theme_bw() +
+  facet_wrap(~ elev_fit, nrow = length(unique(snow_day$elev_fit))) +
+  labs(x = "Year",
+       y = "Days With Snowpack") +
+  theme(axis.title = element_text(size = rel(2), face = "bold"),
+        axis.text = element_text(size = rel(1.5)),
+        legend.title = element_text(size = rel(1.5)),
+        legend.position = "none",
+        plot.subtitle = element_text(face = "bold", size = rel(1.5), color = "red"),
+        panel.grid.major = element_line(color = "black"),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold", size = rel(1.5)))
+```
+
+<br><br>
+
+<p id = "desc">I faceted by elevation to see if by chance lower elevations were being effected more over time, which it appears like they are not.<br><br>There is an extremely slight negative trend, which is shown by the yearly deviations from the mean.</p>
+
+<br><br>
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, fig.width=11, fig.height=6}
+# Deviates from mean
+snow_dev <- snow_day %>% 
+  group_by(year) %>% 
+  summarise(snow_days = mean(snow_days)) %>% 
+  mutate(dev = (snow_days - mean(snow_days))/(max(snow_days) - min(snow_days)))
+
+# graphed
+snow_dev %>% 
+  ggplot(aes(x = year, y = dev)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Year",
+       y = "Deviations From Mean",
+       subtitle = "Devitation = (obs - mean)/range") +
+  theme(axis.title = element_text(size = rel(2), face = "bold"),
+        axis.text = element_text(size = rel(2)),
+        plot.subtitle = element_text(size = rel(1.5), color = "red"))
+```
+
+
+
+
+
+
+
+<br><br>
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+@import url('https://fonts.googleapis.com/css?family=Baloo+Tamma');
+#title {
+margin: auto;
+text-align: center;
+font-size: 90px;
+font-family: 'Baloo Tamma', cursive;
+color: skyblue;
+}
+#desc{
+font-size: 25px;
+font-family: 'Quicksand', sans-serif;
+}
+#link{
+margin: auto;
+text-align: center;
+font-size: 37px;
+color: brown;
+}
+#bullet{
+list-style-type: square;
+}
+#list{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: .5em;
+color: blue;
+}
+#section{
+margin: auto;
+text-align: center;
+font-size: 37px;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+color: #106414;
+letter-spacing: 5px;
+}
+</style>

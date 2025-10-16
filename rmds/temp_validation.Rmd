@@ -1,0 +1,119 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+<p id = "title">KNN Validation</p>
+
+<br><br>
+
+<center>
+
+<a id = "link" href = "https://github.com/Roctober92/senior_project_scripts/blob/master/r_knn/validate_knn.R" target = "_blank">Full Code</a>
+
+</center>
+
+<br><br>
+
+<p id = "desc">I decided that about 2% of the data needed to be imputed, or *replaced with re-stimated values*. In order to make sure my imputation model was correct, I needed to validate. Validation is when we make predictions on a dataset who's target value we already know. That way we can compare the algorithm's estimations to the real data to see where it needs improvement.<br><br>I began by making <strong>train</strong> and <strong>test</strong> datasets. The training set has 7041 rows, which is the same amount of the dataset which contains rows of temperature data who had both missing <strong>max</strong> and <strong>min</strong> values, and therefore simulates using the algorithm on that size of dataset.</p>
+
+<br><br>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/train_test.png)
+
+<br><br>
+
+<p id = "desc">I then applied the functions that finds stations of the same date, as well as the month, and saves their values.</p>
+
+<br><br>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/map.png)
+
+<br><br>
+
+<p id = "desc">Each rows of the missing dataset returned a certain amount of nearby stations. I made histograms showing how many nearby stations per row were returned. The algorithm that looked for <strong>same month</strong> rather than <strong>same date</strong> intuitively returned more rows per station.</p>
+
+<br><br>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/date_hist.png)
+
+<br><br>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/month_hist.png)
+
+<br><br>
+
+<p id = "desc">For every row of missing data, I took both the <strong>mean</strong> and <strong>median</strong> of the nearby stations' temperature, just to see if one provided any useful information over the other.</p>
+
+<br><br>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/mean_med.png)
+
+<br><br>
+
+<p id = "desc">Since the validation is done using a random sample of the data every time, the calculated SSE will be different. Through running through the process times, however, the trends I find are: <br><br></p>
+
+<ul id="bullet">
+  <li id="list"><strong>Date</strong> SSE is much smaller than <strong>month</strong> SSE, for both mean and median</li>
+  <li id="list"><strong>Mean</strong> SSE is just barely smaller than <strong>median</strong> SSE</li>
+</ul>
+
+<br><br>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/sse.png)
+
+<br><br>
+
+<p id = "desc">In the real KNN, I will use mean. I will also provide residual histograms of both predictions, using the mean. You can see how the <strong>same date</strong> stations have a much tighter hold around 0, meaning the predicitons were more accurate.</p>
+
+<br><br>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/date_res.png)
+
+<br><br>
+
+![](../snowpack_elevation/r_scripts_replace_na/pics/month_res.png)
+
+
+<br><br>
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+#title {
+margin: auto;
+text-align: center;
+font-size: 70px;
+font-family: 'Ubuntu', sans-serif;
+}
+#desc{
+font-size: 25px;
+font-family: 'Quicksand', sans-serif;
+}
+#link{
+margin: auto;
+text-align: center;
+font-size: 30px;
+color: red;
+}
+#bullet{
+list-style-type: square;
+}
+#list{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: .5em;
+color: blue;
+}
+</style>

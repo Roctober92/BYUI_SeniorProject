@@ -1,0 +1,236 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE, warning = FALSE, echo = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+full_temp <- read_csv("../data/full_temp.csv")
+data_32 <- read_csv("../data/rknn_to_r/data.32.csv")
+high_max <- read_csv("../data/rknn_to_r/high.max.csv")
+high_min <- read_csv("../data/rknn_to_r/high.min.csv")
+low_max <- read_csv("../data/rknn_to_r/low.max.csv")
+low_min <- read_csv("../data/rknn_to_r/low.min.csv")
+both_na <- read_csv("../data/rknn_to_r/both.na.csv")
+min_na <- read_csv("../data/rknn_to_r/min.na.csv")
+max_na <- read_csv("../data/rknn_to_r/max.na.csv")
+max_mid <- read_csv("../data/to_knn/regular_dots_max.csv") 
+min_mid <- read_csv("../data/to_knn/regular_dots_min.csv")
+sort_month <- function(x) {
+  x %>% 
+    mutate(mon = fct_relevel(mon, levels = c("Jan",
+                                             "Feb",
+                                             "Mar",
+                                             "Apr",
+                                             "May",
+                                             "Jun",
+                                             "Jul",
+                                             "Aug",
+                                             "Sep",
+                                             "Oct",
+                                             "Nov",
+                                             "Dec")))
+}
+```
+
+<p id = "title"><strong>Visualizing Temperature</strong></p>
+
+<br><br>
+
+<p id = "desc">The data was ready to visualize after calculating estimates for the problematic temperature data, and <a id = "link" href = "https://github.com/Roctober92/senior_project_scripts/blob/master/r_knn/post_rknn_combine.R" target = "_blank">combining it</a>.</p>
+
+<br><br>
+
+<p id="section">Daily Maximum Temperatures</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.width=11, fig.height=7}
+#### Max Temp Boxplot
+max_mid %>% 
+  sort_month() %>% 
+  ggplot(aes(x = mon, y = max_temp_mean, color = mon)) +
+  geom_jitter(alpha = .3, width = .4) +
+  geom_boxplot(outlier.shape = NA, alpha = .4) +
+  geom_jitter(shape = 12, color = "black", data = high_max, aes(y = high.max.pred)) +
+  geom_jitter(shape = 12, color = "red", data = low_max, aes(y = low.max.pred)) +
+  theme_bw() +
+  scale_color_manual(values = c("#89EDEA",
+                                "#53C8D3",
+                                "#2C9CA7",
+                                "#2A91C4",
+                                "#217BA8",
+                                "#236B8E",
+                                "#236B8E",
+                                "#217BA8",
+                                "#2A91C4",
+                                "#2C9CA7",
+                                "#53C8D3",
+                                "#89EDEA")) +
+  labs(x = "Month",
+       y = "15 Day Max Temp Mean",
+       title = "Imputed Values & Good Values",
+       caption = "Black = Top .8% || Red = bottom .8%") +
+  theme(plot.title = element_text(size = rel(2), hjust = .5, face = "bold"),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        plot.caption = element_text(size = rel(1.5), face = "bold"),
+        legend.position = "none")
+```
+
+<br><br>
+
+<p id="section">Daily Minimum Temperatures</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.width=11, fig.height=7}
+
+### Min Temp Boxplot
+min_mid %>% 
+  sort_month() %>% 
+  ggplot(aes(x = mon, y = min_temp_mean, color = mon)) +
+  geom_jitter(alpha = .3, width = .4) +
+  geom_boxplot(outlier.shape = NA, alpha = .4) +
+  geom_jitter(shape = 10, color = "black", data = high_min, aes(y = high.min.pred)) +
+  geom_jitter(shape = 10, color = "red", data = low_min, aes(y = low.min.pred)) +
+  theme_bw() +
+  scale_color_manual(values = c("#6EE148",
+                                "#6EE148",
+                                "#54BC31",
+                                "#54BC31",
+                                "#409B22",
+                                "#409B22",
+                                "#409B22",
+                                "#409B22",
+                                "#54BC31",
+                                "#54BC31",
+                                "#6EE148",
+                                "#6EE148")) +
+  labs(x = "Month",
+       y = "15 Day Min Temp Mean",
+       title = "Repredicted Outlier Values",
+       caption = "Black = Top .8% || Red = bottom 1.6%") +
+  theme(plot.title = element_text(size = rel(2), hjust = .5, face = "bold"),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        plot.caption = element_text(size = rel(1.5), face = "bold"),
+        legend.position = "none") +
+  scale_y_continuous(breaks = seq(-20, 80, 10))
+
+```
+
+<br><br>
+
+<p id="section">32 Degree Anamolies</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.width=11, fig.height=7}
+#### Data 32 visualized
+max_mid %>% 
+  sort_month() %>%
+  ggplot(aes(x = mon, color = mon)) +
+  geom_jitter(aes(y = max_temp_mean), width = .3, alpha = .5, color = "gold") +
+  geom_boxplot(aes(y = max_temp_mean), outlier.shape = NA, alpha = .5, width = .5) +
+  geom_jitter(shape = 7, data = min_mid, aes(y = min_temp_mean), width = .3, alpha = .5, color = "green") +
+  geom_boxplot(data = min_mid, aes(y = min_temp_mean), alpha = .5, outlier.shape = NA, width = .5) +
+  geom_jitter(shape = 7, data = data_32, aes(y = high.32.pred), width = .3, color = "black") +
+  geom_jitter(shape = 7, data = data_32, aes(y = low.32.pred), width = .3, color = "brown") +
+  theme_bw() +
+  labs(x = "Month",
+       y = "15 Day Temps Max/Min",
+       title = "Repredicted Outlier Values",
+       caption = "Black = high temp pred, Red = low temp pred, Gold = high temp, Green = low temp") +
+  theme(plot.title = element_text(size = rel(2), hjust = .5, face = "bold"),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        plot.caption = element_text(size = rel(1.5), face = "bold"),
+        legend.position = "none") 
+```
+
+<br><br>
+
+<p id="section">Missing Temperature Observations</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.width=11, fig.height=7}
+#### NA Visualization
+max_mid %>% 
+  sort_month() %>%
+  ggplot(aes(x = mon, color = mon)) +
+  geom_jitter(aes(y = max_temp_mean), width = .3, alpha = .5, color = "gold") +
+  geom_jitter(shape = 13, data = min_mid, aes(y = min_temp_mean), width = .3, alpha = .5, color = "lightgreen") +
+  geom_jitter(shape = 13, data = both_na, aes(y = both_high_pred), width = .3, color = "purple") +
+  geom_jitter(shape = 13, data = both_na, aes(y = both_low_pred), width = .3, color = "brown") +
+  geom_jitter(shape = 13, data = max_na, aes(y = na.max.pred), width = .3, color = "skyblue") +
+  geom_jitter(shape = 13, data = min_na, aes(y = na.min.pred), width = .3, color = "black") +
+  theme_bw() +
+  labs(x = "Month",
+       y = "15 Day Temps Max/Min",
+       title = "Repredicted NA Values",
+       caption = "Black = Min Na, Brown = Low Both Na, Blue = Max Na, Purple = High Both Na",
+       subtitle = "Data lines created when NA row had only 1 surrounding station matching criteria") +
+  theme(plot.title = element_text(size = rel(2), hjust = .5, face = "bold"),
+        axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        plot.caption = element_text(size = rel(1.5), face = "bold"),
+        plot.subtitle = element_text(size = rel(1.5)),
+        legend.position = "none")
+```
+
+<p id = "desc"> </p>
+
+
+
+
+
+<br><br>
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+@import url('https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz');
+#title {
+margin: auto;
+text-align: center;
+font-size: 70px;
+font-family: 'Ubuntu', sans-serif;
+}
+#desc{
+font-size: 25px;
+font-family: 'Quicksand', sans-serif;
+}
+#link{
+margin: auto;
+text-align: center;
+font-size: 25px;
+color: red;
+}
+#bullet{
+list-style-type: square;
+}
+#list{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: .5em;
+color: blue;
+}
+#section{
+margin: auto;
+text-align: center;
+font-size: 45px;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+color: #106414;
+letter-spacing: 5px;
+margin-left: 2em;
+}
+</style>

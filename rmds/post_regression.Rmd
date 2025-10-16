@@ -1,0 +1,175 @@
+---
+title: ''
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(car)
+```
+
+<p id = "title"><strong>Post Estimation Visuals</strong></p>
+
+<br><br>
+
+<p id = "desc">Mapping a histogram of frequencies, we see that there is a substantial amount that are 0.</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.width=11, fig.height=5}
+# get data
+depths <- read_csv("../data/full_snow.csv")
+
+# set theme
+theme_set(theme_bw())
+
+# Function to order months
+month_set <- function(x) {
+  x %>% 
+    mutate(mon = fct_relevel(mon, levels = c("Jan",
+                                             "Feb",
+                                             "Mar",
+                                             "Apr",
+                                             "May",
+                                             "Jun",
+                                             "Jul",
+                                             "Aug",
+                                             "Sep",
+                                             "Oct",
+                                             "Nov",
+                                             "Dec")))
+    
+}
+
+# histogram of frequencies
+depths %>% 
+  ggplot(aes(x = start_snow_depth)) +
+  geom_histogram(bins = 200, color = "black", fill = "blue") +
+  labs(y = "Frequency", x = "Snow Depth Observations") +
+  theme(axis.title = element_text(size = rel(2), face = "bold", color = "blue"),
+        axis.text = element_text(size = rel(1.5)))
+```
+
+<br><br>
+
+<p id = "desc">How many observations of 0 happen per month?</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.width=11, fig.height=5}
+depths %>% 
+  month_set() %>% 
+  filter(start_snow_depth < 1) %>% 
+  group_by(mon) %>% 
+  summarize(count = n()) %>% 
+  ggplot(aes(x = mon, y = count)) + 
+  geom_point(size = 15) +
+  geom_text(aes(y = count, label = count), color = "white") +
+  theme_bw() +
+  labs(x = "Month",
+       y = "Number of Observations",
+       title = "Observation Amount When Depth = 0",
+       color = "",
+       subtitle = "") +
+  theme(plot.title = element_text(hjust = .5, size = rel(2)),
+        axis.title = element_text(size = rel(1.5)),
+        plot.subtitle = element_text(face = "bold"),
+        axis.text = element_text(size = rel(1.5)),
+        legend.position = "none")
+```
+
+<br><br>
+
+<p id = "desc">And what is the frequency of reported snow depths that weren't 0?</p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.width=11, fig.height=7}
+depths %>%
+  filter(start_snow_depth > 1) %>% 
+  ggplot(aes(x = start_snow_depth)) +
+  geom_histogram(bins = 200, color = "black", fill = "darkgreen") +
+  scale_x_continuous(breaks = seq(0, 200, 20)) +
+  scale_y_continuous(breaks = seq(0, 850, 100)) +
+  annotate("text", x = 30, y = 845, label = "69643 Observations") +
+  annotate("text", x = 80, y = 845, label = "5118 Observations") +
+  geom_vline(xintercept = 60, color = "red", linetype = "dashed") +
+  labs(x = "Snow Depth",
+       y = "Number of Observations",
+       title = "Snow Depth Observation Amount",
+       color = "",
+       subtitle = "Excluding ratios < 1") +
+  theme(plot.title = element_text(hjust = .5, size = rel(2)),
+        axis.title = element_text(size = rel(1.5)),
+        plot.subtitle = element_text(face = "bold",size = rel(1.5)),
+        axis.text = element_text(size = rel(1.5)),
+        legend.position = "none")
+```
+
+<p id = "desc">According to <strong>NRCS</strong>, most snow depths should be below 150, and very seldom will there be any near that.<br><br>Here is the data spread when there is snow depth. <i>Notice how the months of July and August don't have any snow depth reported.</i></p>
+
+<br><br>
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, fig.width=11, fig.height=6}
+depths %>% 
+  month_set() %>%
+  filter(start_snow_depth >= 1) %>% 
+  ggplot(aes(x = mon, y = start_snow_depth, color = mon)) +
+  geom_jitter(width = .2, alpha = .3) +
+  geom_boxplot(width = .4, alpha = .5, outlier.shape = NA, color = "black") +
+  labs(x = "Months",
+       y = "Snow Depth",
+       title = "Snow Depth Per Month",
+       color = "",
+       subtitle = "Excluding ratios < 1, Aug-Sep have all < 1",
+       caption = "High May outlier values?") +
+  theme(plot.title = element_text(hjust = .5, size = rel(2), face = "bold"),
+        axis.title = element_text(size = rel(2), face = "bold"),
+        plot.subtitle = element_text(face = "bold",size = rel(1.5), color = "blue"),
+        axis.text = element_text(size = rel(1.5)),
+        plot.caption = element_text(face = "bold", size = rel(1.5),  color = "red"),
+        legend.position = "none") 
+```
+
+
+
+
+<br><br>
+<p id = "desc"> </p>
+<a id = "link" href = "" target = "_blank"> </a>
+<i></i>
+<strong></strong>
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Oswald|Ubuntu');
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+#title {
+margin: auto;
+text-align: center;
+font-size: 70px;
+font-family: 'Ubuntu', sans-serif;
+}
+#desc{
+font-size: 25px;
+font-family: 'Quicksand', sans-serif;
+}
+#link{
+margin: auto;
+text-align: center;
+font-size: 25px;
+color: brown;
+}
+#bullet{
+list-style-type: square;
+}
+#list{
+font-size: 30px;
+font-family: 'Quicksand', sans-serif;
+margin-bottom: .5em;
+color: blue;
+}
+</style>
