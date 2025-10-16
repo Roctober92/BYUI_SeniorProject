@@ -20,7 +20,7 @@ library(lubridate)
 
 <center>
 
-![](../snowpack_elevation/r_scripts_replace_na/pics/snow_ratio.png)
+![](../pics/snow_ratio.png)
 
 </center>
 
