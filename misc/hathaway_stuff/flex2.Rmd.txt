@@ -1,0 +1,527 @@
+---
+title: "This Guy, Elmore, Made This"
+author: "Elmore Wallace"
+output: flexdashboard::flex_dashboard
+---
+
+
+```{r,message=FALSE,warning=FALSE,echo=FALSE}
+
+
+```
+
+
+AAPL: Stock Price Trends {.storyboard}
+=========================================
+
+### **AAPL: Stock Price with 10 and 20 moving average, MACD at Bottom** {data-commentary-width=200}
+
+```{r, eval=TRUE, include=FALSE, fig.width=10,fig.height=7}
+library(quantmod)
+getSymbols("AAPL", src = "yahoo")
+chartSeries(AAPL,
+            subset = '2017-12::2018',
+            show.grid = TRUE,
+            time.scale = NULL,
+            log.scale = FALSE,
+            bar.type = "ohlc")
+  addSMA(n = 50, on = 1, overlay = TRUE, col = "blue")
+  addSMA(n = 20, on = 1, overlay = TRUE, col = "red")
+  addMACD(fast = 12, slow = 26, signal = 9)
+```  
+
+
+```{r}
+addRSI(n = 14, maType = "EMA", wilder = TRUE)
+```
+
+```
+
+*** 
+
+**Summary**   
+   
+* Add: Consumer Electronics Index   
+* Add: S&P 500
+* Add: Returns table + Dividend Yield + Market Cap
+* MACD is short for moving average convergence/divergence. A trading indicator used in technical analysis, is supposed to reveal changes in the strength, direction, momentum, and duration of trending stock price movements.
+* The relative strength index (RSI) is a momentum indicator that compares the magnitude of recent gains and losses over a period of time. It measures speed and directional changes of price movements of a financial security - identifing overbought or oversold conditions.
+   
+**Observations**   
+   
+* Add: Trailing Total Returns.
+* Add: Total Retun (%) 
+ 
+
+### **AAPL: Another Graphic** Candle stick + BBands + CCI {data-commentary-width=200}
+
+```{r, eval=TRUE, include=FALSE, fig.width=10,fig.height=7}
+chartSeries(AAPL, theme = 'white', subset = '2017-12::2018')
+  addBBands()
+```
+
+```{r}
+addCCI()
+```
+
+
+
+*** 
+
+**Summary**   
+   
+* A Bollinger Band plots two standard deviations away from a simple moving average as a measure of volatility. When the market becomes more volatile, the bands become wider and contract durring less volatile periods.
+* Squeezes: When the bands come close together, it is called a squeeze. This signals a period of low volatility and can be considered as a signal for potential trading opportunities.
+* Breakouts: About 90% of price movements take place between the two Bollinger Bands. Any breakout above or below the band is a major event in the stock price movement. These are not sell or buy signals, however, as they do not indicate any directional movements for future price.
+* The Commodity Channel Index (CCI) is a stochastic oscillator that measures the change in an instrument's price relative to a pre-defined moving average of the price divided by 1.5 percent of a normal deviation from that average. As a technical trading tool used most often to help determine when an investment vehicle is reaching a condition of being oversold or overbought.
+
+### **AAPL: One Year Adjusted Stock Price** Interactive Graphic  {data-commentary-width=200}
+
+```{r,fig.width=10,fig.height=7, eval = TRUE}
+
+library(dygraphs)
+library(quantmod)
+library(tidyquant)
+
+
+AAPLDy <-
+  tq_get("AAPL",
+         get = "stock.prices",
+         from = "2017-12-01",
+         to = "2018-06-20")
+
+AAPLdyII <-
+  AAPLDy %>%
+  select(date, adjusted)
+
+Xts <-
+xts(AAPLdyII$adjusted,
+order.by = AAPLdyII$date)
+
+
+dygraph(Xts, main = "One Year of AAPL Adjusted Stock Price Data") %>%
+  dyAnnotation("2018-06-06", text = "E", 
+               tooltip = "Stock Price makes a Promising Recovery") %>% 
+  dyAxis("y", label = "Stock Price in Dollars") %>%
+  dyAnnotation("2018-04-27", text = "D", 
+               tooltip = "Three Year Low") %>% 
+  dyAxis("y", label = "Stock Price in Dollars") %>%
+  dyAnnotation("2018-02-06", text = "C", 
+               tooltip = "Peak Between a Trough") %>% 
+  dyAnnotation("2018-01-17", text = "B", 
+               tooltip = "Second Peak") %>% 
+  dyAnnotation("2017-12-18", text = "A", 
+               tooltip = "Peak") %>% 
+  dyAxis("y", label = "Stock Price in Dollars")  
+
+```
+
+*** 
+
+**Summary**   
+   
+* A:
+* B:
+* C:
+* D:
+* E:
+   
+### **Apple vs Microsoft** Interactive Graphic {data-commentary-width=200}
+
+```{r, eval=TRUE, include=FALSE, fig.width=10,fig.height=7}
+
+library(dygraphs)
+library(quantmod)
+library(tidyquant)
+
+
+tickers <- c("AAPL", "MSFT")
+getSymbols(tickers)
+closePrices <- do.call(merge, lapply(tickers, function(x) Cl(get(x))))
+dateWindow <- c("2008-01-01", "2009-01-01")
+
+dygraph(closePrices, main = "Value", group = "stock") %>%
+  dyRebase(value = 100) %>%
+  dyRangeSelector(dateWindow = dateWindow)
+
+dygraph(closePrices, main = "Percent", group = "stock") %>%
+  dyRebase(percent = TRUE) %>%
+  dyRangeSelector(dateWindow = dateWindow)
+  
+```
+
+```{r}
+dygraph(closePrices, main = "None", group = "stock") %>%
+  dyRangeSelector(dateWindow = dateWindow)
+```
+
+
+*** 
+
+**Summary**   
+   
+* 
+   
+**Observations**   
+   
+* 
+
+
+
+AAPL: Key Financial Ratios {.storyboard}
+=========================================
+
+### Financial Ratios
+
+```{r,fig.width=12,fig.height=5, eval = TRUE}
+
+library(tidyquant)
+AAPLFinancial <-
+  tq_get("AAPL", "key.ratios")
+
+AAPL1 <- 
+  AAPLFinancial$data[[1]]
+
+AAPL2 <- 
+  AAPLFinancial$data[[2]]
+
+AAPL3 <-
+  AAPLFinancial$data[[3]]
+
+AAPL4 <-
+  AAPLFinancial$data[[4]]
+
+AAPL5 <-
+  AAPLFinancial$data[[5]]
+
+AAPL6 <-
+  AAPLFinancial$data[[6]]
+
+AAPL7 <-
+  AAPLFinancial$data[[7]]
+
+AAPL1 %>%
+  ggplot(aes(x = date, y = value)) +
+  facet_wrap(~category, ncol = 5, scales = "free") +
+  geom_line() +
+  labs(title = "AAPL: Financial Ratios 2008 to 2018",
+       subtitle = "Enjoy",
+       y = "Free Y Scale",
+       x = "Date by Year") +
+  theme_tq(base_size = 6, base_family = "")
+
+```
+
+*** 
+
+* Add: Valuation History Compared to S&P 500
+* Price/Earnings, Price/Book, Price/Sales, Price/Cash Flow
+* Add: Yields; Earnings, Dividend, Cash, S&P 500 Earnings, T-bond yield
+
+### Profitability Ratios
+
+```{r,fig.width=12,fig.height=5, eval = TRUE}
+AAPL2 %>%
+  # filter(category %in% c("fish", "bob"), sub.section %in% c())
+  ggplot(aes(x = date, y = value)) +
+  facet_wrap(~category + sub.section, ncol = 5, scales = "free" ) +
+  geom_line() +
+  labs(title = "AAPL: Profitability Ratios",
+       y = "Free Y Scale",
+       x = "Date by Year") +
+  theme_tq(base_size = 6)
+
+```
+
+### Growth Ratios
+
+```{r,fig.width=12,fig.height=5, eval = TRUE}
+AAPL3 %>%
+  ggplot(aes(x = date, y = value)) +
+  facet_wrap(~category + sub.section, ncol = 5, scales = "free" ) +
+  geom_line() +
+  labs(title = "AAPL: Growth Ratios",
+       y = "Free Scale Y",
+       x = "Date by Year") +
+  theme_tq(base_size = 6)
+```
+
+### Cash Flow Ratios
+
+```{r,fig.width=12,fig.height=5, eval = TRUE}
+AAPL4 %>%
+  filter(sub.section == "Cash Flow Ratios") %>%
+  ggplot(aes(x = date, y = value)) +
+  facet_wrap(~category, nrow = 2, scales = "free") +
+  geom_line() +
+  labs(title = "AAPL: Cash Flow Ratios",
+       subtile = "Data From Yahoo Finance",
+       y = "Free Scale Y",
+       x = "Date by Year") +
+  theme_tq(base_size = 8)
+```
+
+### Financial Health Ratios
+
+```{r,fig.width=24,fig.height=10, eval = TRUE}
+AAPL5 %>%
+  ggplot(aes(x = date, y = value)) +
+  facet_wrap(~category + sub.section, nrow = 5, scales = "free" ) +
+  geom_line() +
+  labs(title = "AAPL:Financial Health Ratios",
+       y = "Free Y Scale",
+       x = "Date by Year") +
+  theme_tq(base_size = 7)
+```
+
+### Efficiency Ratios
+
+```{r,fig.width=12,fig.height=5, eval = TRUE}
+AAPL6 %>%
+  filter(sub.section == "Efficiency") %>%
+  ggplot(aes(x = value, y = date)) +
+  facet_wrap(~category, nrow = 4, scales = "free") +
+  geom_line() +
+  labs(title = "AAPL: Efficiency Ratios",
+       subtile = "Enjoy",
+       y = "Free Scale Y",
+       x = "Date by Year") +
+  theme_tq(base_size = 10)
+```
+
+### Valuation Ratios
+
+```{r,fig.width=12,fig.height=5, eval = TRUE}
+AAPL7 %>%
+  filter(sub.section == "Valuation Ratios") %>%
+  ggplot(aes(x = date, y = value)) +
+  facet_wrap(~category, nrow = 4, scales = "free") +
+  geom_line() +
+  labs(title = "AAPL: Valuation Ratios",
+       subtile = "Enjoy",
+       y = "Free Scale Y",
+       x = "Date by Year") +
+  theme_tq(base_size = 10)
+```
+
+
+Data Tables {.storyboard}
+=========================================
+
+### Stock Price data
+
+```{r, fig.width=12, fig.height=7, eval = TRUE}
+
+library(DT)
+datatable(AAPL, options = list(pageLength = 5))
+
+```
+
+Economic Data {.storyboard}
+=========================================
+
+### Consumer Price Index
+```{r, fig.width=12, fig.height=7, eval = TRUE}
+CPI <-
+  tq_get(x = c("CPIAUCSL"),
+         get = "economic.data", 
+         from = "2000-01-01", 
+         to = "2018-01-01")
+
+CPI %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line(color = "blue", size = 1) +
+  labs(title = "Consumer Price Index for All Urban Consumers: All Items (CPIAUCSL)",
+       subtitle = "Index 1982 - 1984 = 100 | Monthly",
+       y = "Index 1982 - 1984 = 100",
+       x = "Source: U.S. Bureau of Labor Statistics via FRED") +
+  theme_tq()
+```
+
+### Federal Reserve Balance Sheet
+```{r, fig.width=12, fig.height=7, eval = TRUE}
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(lubridate)
+
+dat <- read_xlsx("C:/Users/Elmore Wallace/Downloads/Book.xlsx")
+
+clean_dat <- dat %>% 
+  clean_names() %>% 
+  gather(key = "type", value = "amount", 2:4) %>% 
+  mutate(type = fct_relevel(type, c("us_condition_of_all_federal_reserve_banks_total_assets",
+                                    "fed_system_open_market_account_t_notes_bonds_held_in_account",
+                                    "fed_system_open_market_account_agency_mbs_held_in_the_account")))
+
+ggplot() + 
+  annotate("rect", xmin = as_datetime("2007-12-31"), xmax = as_datetime("2009-06-01"),
+           ymin = -Inf, ymax = Inf, fill = "red", alpha = .4) + 
+  geom_ribbon(data = filter(clean_dat, type == "us_condition_of_all_federal_reserve_banks_total_assets"),
+              aes(x = date, ymin = 0, ymax = amount), fill = "cyan", color = "cyan", alpha = .2, size = 1.5) + 
+  geom_bar(data = filter(clean_dat, type != "us_condition_of_all_federal_reserve_banks_total_assets"),
+           aes(x = date, y = amount, fill = type), stat = "identity") + 
+  scale_fill_manual(values = c("white", "yellow")) + 
+  scale_x_datetime(date_breaks = "3 months", date_labels = "%b") + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title = "Federal Reserve's Balance Sheet") + 
+  theme_minimal() + 
+  theme(legend.position = "none",
+        plot.background = element_rect(fill = "black"),
+        text = element_text(color = "white"),
+        axis.text = element_text(color = "white"),
+        panel.grid = element_line(linetype = "dashed", color = "grey30"),
+        panel.grid.minor.x = element_blank(),
+        axis.title = element_blank())
+```
+
+### RGDP Dy Graphic
+
+```{r,fig.width=10,fig.height=7, eval = TRUE}
+library(dygraphs)
+library(quantmod)
+library(tidyquant)
+
+RGDPI <-
+  tq_get(x = c("GDPC1"),
+         get = "economic.data",
+         from = "2000-01-01",
+         to = "2018-01-01")
+
+XtsRGDP <-
+  xts(RGDPI$price,
+      order.by = RGDPI$date)
+
+dygraph(XtsRGDP, main = "Real Gross Domestic Product (GDPC1) With Recession Shadding") %>% 
+  dyShading(from = "2007-01-01", to = "2009-01-01") %>%
+  dyShading(from = "2001-01-01", to = "2001-12-12") %>%
+  dyShading(from = "1989-01-01", to = "1991-01-01")
+
+```
+
+### Civilian Unemployment Rate
+
+```{r, fig.width=12, fig.height=7, eval = TRUE}
+UnEmploy <- 
+  tq_get(x = c("UNRATE"), 
+         get = "economic.data",
+         from = "2000-01-01",
+         to = "2018-01-01")
+
+UnEmploy %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line(color = "blue", size = 1) +
+  labs(title = "Civilian Unemployment Rate (UNRATE)",
+       subtitle = "Percent | Monthly",
+       x = "Source: U.S. Bureau of Labor Statistics via FRED",
+       y = "Percent") +
+  theme_tq()
+```
+
+### Industrial Production Index
+```{r, fig.width=12, fig.height=7, eval = TRUE}
+IndustrialProduction <-
+  tq_get(x = c("INDPRO"),
+         get = "economic.data",
+         from = "2000-01-01",
+         to = "2018-01-01")
+
+IndustrialProduction %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line(color = "blue", size = 1) +
+  labs(title = "Industrial Production Index",
+       subtitle = "Index 2012 = 100 | Monthly",
+       x = "Source: Board of Governors of the Federal Reserve System (US) via FRED",
+       y = "Index 2012 = 100") +
+  theme_tq()
+```
+
+### Nonfarm Payrolls
+```{r, fig.width=12, fig.height=7, eval = TRUE}
+Nonfarm <-
+  tq_get(x = c("PAYEMS"),
+         get = "economic.data",
+         from = "2000-01-01",
+         to = "2018-01-01")
+
+Nonfarm %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line(color = "blue", size = 1) +
+  labs(title = "All Employees: Total Nonfarm Payrolls (PAYEMS)",
+       subtitle = "Thousands of Persons | Monthly",
+       y = "Thousands of Persons",
+       x = "Source: U.S. Bureau of Labor Statistics via FRED") +
+  theme_tq()
+```
+
+### Federal Funds Rate
+```{r, fig.width=12, fig.height=7, eval = TRUE}
+FF <-
+  tq_get(x = c("FEDFUNDS"),
+         get = "economic.data",
+         from = "2000-01-01",
+         to = "2018-01-01")
+
+FF %>%
+  ggplot(aes(x = date, y = price)) +
+  geom_line(color = "blue", size = 1) +
+  labs(title = "Effective Federal Funds Rate (FEDFUNDS)",
+       subtitle = "Percent | Monthly",
+       y = "Percent",
+       x = "Source: Board of Governors of the Federal Reserve System via FRED") +
+  theme_tq()
+```
+
+### DyGraphic
+
+```{r, fig.width=12, fig.height=7, eval = TRUE}
+
+library(dygraphs)
+library(quantmod)
+library(tidyquant)
+
+M3Dy <-
+  tq_get(x = c("MABMM301USM189S"),
+         get = "economic.data",
+         from = "2014-01-01",
+         to = "2018-01-01")
+
+M3DyII <-
+  M3Dy %>%
+  select(date, price)
+
+XtsM3Dy <-
+  xts(M3DyII$price,
+      order.by = M3DyII$date)
+
+
+dygraph(XtsM3Dy, main = "M3 U.S. | Trillions | Monthly") %>%
+  dyAnnotation("2016-01-26", text = "E", 
+               tooltip = "Stock Price makes a Promising Recovery") %>% 
+  dyAxis("y", label = "Stock Price in Dollars") %>%
+  dyAnnotation("2017-09-29", text = "D", 
+               tooltip = "Three Year Low") %>% 
+  dyAxis("y", label = "Stock Price in Dollars") %>%
+  dyAnnotation("2017-06-13", text = "C", 
+               tooltip = "Amazon Whole Foods Purchase") %>% 
+  dyAnnotation("2015-12-07", text = "A", 
+               tooltip = "Amazon Announces Smart Grocery Stores Called Amazon Go") %>% 
+  dyAnnotation("2016-05-10", text = "B", 
+               tooltip = "Amazon Announces Meal Kits to Come Fall 2016") %>% 
+  dyAxis("y", label = "Stock Price in Dollars")  
+
+```
+
+*** 
+
+**What is M3**   
+   
+* M3 is a measure of the money supply that includes M2 as well as large time deposits, institutional money market funds, short-term repurchase agreements and other liquid assets  
+* The M3 measurement includes assets that are less liquid than other components of the money supply and are referred to as "near, near money," which are more closely related to the finances of larger financial institutions and corporations than to those of small businesses and individuals.
+   
+**Calculating M3 and Its Importance**   
+   
+* Each M3 component is given equal weight during calculation. For example, M2 and large time deposits are treated the same and aggregated without any adjustments. While this does create a simplified calculation, it assumes that each component of M3 affects the economy the same way. This can be considered a shortcoming of this measurement of the money supply.
+* Since 2006, M3 is no longer tracked by the U.S. central bank, the Federal Reserve (Fed). The Fed did not use M3 in its monetary policy decisions even before 2006. The additional less liquid components of M3 did not seem to convey more economic information than was already captured by the more liquid components of M2.
+
+   
