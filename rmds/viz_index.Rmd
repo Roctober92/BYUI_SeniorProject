@@ -12,7 +12,7 @@ library(lubridate)
 
 <center>
 
-![](../snowpack_elevation/r_scripts_replace_na/pics/flag.png)
+![](../pics/flag.png)
 
 </center>
 
@@ -27,10 +27,10 @@ library(lubridate)
 <br><br>
 
 <ul id = "bullet">
-  <li id = "list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/season_length.html" target = "_blank"> Snow Season Length</a></li>
-  <li id = "list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/year_temp_dist.html" target = "_blank">Yearly Temperature Distribution</a></li>
-  <li id = "list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/snow_change.html" target = "_blank">Different Snow Depth Changes Among Elevation</a></li>
-  <li id = "list"><a id = "link" href = "https://byuidatascience.github.io/WolfeA_SeniorProject/year.html" target = "_blank">Yearly Temperature And Snow Depth Trends</a></li>
+  <li id = "list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/season_length.html" target = "_blank"> Snow Season Length</a></li>
+  <li id = "list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/year_temp_dist.html" target = "_blank">Yearly Temperature Distribution</a></li>
+  <li id = "list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/snow_change.html" target = "_blank">Different Snow Depth Changes Among Elevation</a></li>
+  <li id = "list"><a id = "link" href = "https://roctober92.github.io/BYUI_SeniorProject/html_scripts/year.html" target = "_blank">Yearly Temperature And Snow Depth Trends</a></li>
 </ul>
 
 
